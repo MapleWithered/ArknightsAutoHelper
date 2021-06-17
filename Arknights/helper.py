@@ -154,6 +154,13 @@ class ArknightsHelper(object):
             m = uniform(0, 0.3)
             n = uniform(n - m * 0.5 * n, n + m * n)
         self.frontend.delay(n, allow_skip)
+    
+    def wait(self, n=10,  # 等待时间中值
+               MANLIKE_FLAG=True, allow_skip=False):  # 是否在此基础上设偏移量
+        if MANLIKE_FLAG:
+            m = uniform(0, 0.3)
+            n = uniform(n - m * 0.5 * n, n + m * n)
+        self.frontend.delay(n, allow_skip)
 
     def mouse_click(self,  # 点击一个按钮
                     XY):  # 待点击的按钮的左上和右下坐标
@@ -822,7 +829,7 @@ class ArknightsHelper(object):
         self.tap_quadrilateral(imgreco.main.get_friend_build(screenshot))
         self.__wait(MEDIUM_WAIT)
         building_count = 0
-        while building_count <= 11:
+        while building_count <= 4:
             screenshot = self.adb.screenshot()
             self.tap_quadrilateral(imgreco.main.get_next_friend_build(screenshot))
             self.__wait(MEDIUM_WAIT)

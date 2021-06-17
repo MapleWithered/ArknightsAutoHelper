@@ -26,8 +26,8 @@ print(desc)
 exclude_names = ['固源岩组']
 print('不刷以下材料:', exclude_names)
 
-# cache_key = '%Y-%m-%d'  # cache by day
-cache_key = '%Y--%V'    # cache by week
+cache_key = '%Y-%m-%d'  # cache by day
+# cache_key = '%Y--%V'    # cache by week
 
 
 aog_cache_file = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'aog_cache.json')
