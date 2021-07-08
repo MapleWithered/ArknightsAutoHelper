@@ -125,6 +125,7 @@ def print_plan():
         plan = json.load(f)
     
     print_plan_with_plan(plan)
+    print_sanity_usage(plan)
 
 def get_good_stage_id(stages_same_prior):
     stage_ok_id = -1
@@ -141,7 +142,7 @@ def get_good_stage_id(stages_same_prior):
 def print_plan_with_plan(plan):
     logger.warning("当前刷图计划：")
     logger.info("-----------------------------------------------------------------------------------")
-    logger.info("优先  " + "关卡".ljust(8) + "计划".ljust(5) + "剩余".ljust(5) + "余比".ljust(8) + "备注")
+    logger.info("优先  " + "关卡".ljust(8) + "理智".ljust(5) + "计划".ljust(5) + "剩余".ljust(5) + "余比".ljust(8) + "备注")
     logger.info("-----------------------------------------------------------------------------------")
     prior = 1
     ok_task_used = False
@@ -161,11 +162,44 @@ def print_plan_with_plan(plan):
             else:
                 status_char = ' '
             if fini_percent == 100 or task['count'] == 9999 or fini_percent == 0:
-                logger.info(str(prior).ljust(6) + task['stage'].ljust(10) + str(task['count']).ljust(7) + str(remain).ljust(7) + " --  " + status_char + "    " + task['//'])
+                logger.info(str(prior).ljust(6) + task['stage'].ljust(10) + str(task.get('sanity', '')).ljust(7) + str(task['count']).ljust(7) + str(remain).ljust(7) + " --  " + status_char + "    " + task['//'])
             else:
-                logger.info(str(prior).ljust(6) + task['stage'].ljust(10) + str(task['count']).ljust(7) + str(remain).ljust(7) + str(fini_percent).rjust(3) + "% " + status_char + "    " + task['//'])
+                logger.info(str(prior).ljust(6) + task['stage'].ljust(10) + str(task.get('sanity', '')).ljust(7) + str(task['count']).ljust(7) + str(remain).ljust(7) + str(fini_percent).rjust(3) + "% " + status_char + "    " + task['//'])
         logger.info("-----------------------------------------------------------------------------------")
         prior += 1
+
+def print_sanity_usage(plan):
+    prior = 1
+    now_prior = -1
+    ok_task_used = False
+    for tasks_same_prior in plan['stages']:
+        stages_same_prior = tasks_same_prior['stages']
+        ok_id = get_good_stage_id(stages_same_prior)
+        for task_id, task in enumerate(stages_same_prior):
+            remain = task.get('remain', task['count'])
+            fini_percent = int((remain / task['count']) * 100)
+            if fini_percent == 0:
+                status_char = '√'
+            elif task['stage'] in list_not_open:
+                status_char = '×'
+            elif task_id == ok_id and ok_task_used == False:
+                status_char = '○'
+                now_prior = prior
+                ok_task_used = True
+            else:
+                status_char = ' '
+        prior += 1
+        if ok_task_used:
+            break
+    if now_prior != -1:
+        sanity_usage = 0
+        for task in plan['stages'][now_prior-1]['stages']:
+            sanity_usage += task.get('remain', task['count']) * task.get('sanity', 0)
+        hour_rest = sanity_usage / 300 * 24
+        if hour_rest >= 24:
+            logger.info("仍需：" + str(sanity_usage) + " 理智  -  " + str(int(hour_rest//24)) + " 天 " + str(int(hour_rest%24)+1) + " 小时")
+        else:
+            logger.info("仍需：" + str(sanity_usage) + " 理智  -  " + str(int(hour_rest%24)+1) + " 小时")
 
 def run_print_plan():
 
