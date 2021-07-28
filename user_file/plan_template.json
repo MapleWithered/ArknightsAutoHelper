@@ -1,0 +1,97 @@
+{
+    "__idle_stage": "CE-5",
+    "refill_ap_with_item": false,
+    "refill_ap_with_originium": false,
+    "stages": [
+        {
+            "stages": [
+                {
+                    "stage": "RI-8",
+                    "sanity": 18,
+                    "count": 9999,
+                    "//": "活动 海胆",
+                    "remain": 9887
+                }
+            ]
+        },
+        {
+            "stages": [
+                {
+                    "stage": "PR-B-2",
+                    "sanity": 36,
+                    "count": 12,
+                    "//": "灰喉 精二 芯片"
+                },
+                {
+                    "stage": "CE-5",
+                    "sanity": 30,
+                    "count": 16,
+                    "//": "灰喉 精二 120000币"
+                }
+            ]
+        },
+        {
+            "stages": [
+                {
+                    "stage": "4-8",
+                    "sanity": 21,
+                    "count": 9,
+                    "//": "推王 小僧 精二材料"
+                },
+                {
+                    "stage": "1-7",
+                    "sanity": 6,
+                    "count": 58,
+                    "//": "推王 小僧 精二材料"
+                },
+                {
+                    "stage": "PR-C-2",
+                    "sanity": 36,
+                    "count": 32,
+                    "//": "推王 小僧 精二芯片"
+                }
+            ]
+        },
+        {
+            "stages": [
+                {
+                    "stage": "CE-5",
+                    "sanity": 30,
+                    "count": 9999,
+                    "//": "龙门币 储备",
+                    "remain": 9993
+                }
+            ]
+        },
+        {
+            "stages": [
+                {
+                    "stage": "LS-5",
+                    "sanity": 30,
+                    "count": 9999,
+                    "//": "经验本 储备",
+                    "remain": 9991
+                }
+            ]
+        },
+        {
+            "stages": [
+                {
+                    "stage": "TODO",
+                    "count": 1,
+                    "//": "灰喉 精二"
+                },
+                {
+                    "stage": "TODO",
+                    "count": 1,
+                    "//": "升级 - 爱丽丝 小僧 推王 红"
+                },
+                {
+                    "stage": "TODO",
+                    "count": 1,
+                    "//": "升级 - 松果 调香师 古米 雷蛇"
+                }
+            ]
+        }
+    ]
+}
