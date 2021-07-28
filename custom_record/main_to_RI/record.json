@@ -1,13 +1,13 @@
 {
     "back_to_main": true,
-    "description": "沃伦姆德的薄暮·复刻 - 议事高塔",
+    "description": "从主线一路点击进入RI关卡（章节）",
     "prefer_mode": "match_template",
     "records": [
         {
             "img": "step0.png",
             "point": [
-                1175,
-                186
+                935,
+                162
             ],
             "raise_exception": true,
             "repeat": 1,
@@ -18,8 +18,20 @@
         {
             "img": "step1.png",
             "point": [
-                1183,
-                372
+                458,
+                145
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 2
+        },
+        {
+            "img": "step2.png",
+            "point": [
+                1163,
+                340
             ],
             "raise_exception": true,
             "repeat": 1,
