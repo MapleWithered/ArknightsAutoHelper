@@ -14,9 +14,9 @@ def run_plan():
 
     helper, _ = _create_helper()
     
-    assert os.path.exists('config/plan.json'), '未能检测到刷图计划文件.'
+    assert os.path.exists('user_file/plan.json'), '未能检测到刷图计划文件.'
 
-    with open('config/plan.json', 'r') as f:
+    with open('user_file/plan.json', 'r') as f:
         plan = json.load(f)
 
     assert plan['stages'], "刷图计划文件中未能检测到刷图计划，或格式错误"
@@ -83,7 +83,7 @@ def run_plan():
                 break
             else: # 成功执行一次任务
                 stage['remain'] = stage.get('remain', stage['count']) - 1
-                with open('config/plan.json', 'w') as f:
+                with open('user_file/plan.json', 'w') as f:
                     json.dump(plan, f, indent=4, sort_keys=False, ensure_ascii = False)
                 break # 重新进行优先级遍历
 
@@ -138,7 +138,7 @@ def run_task():
 
 def print_plan():
 
-    with open('config/plan.json', 'r') as f:
+    with open('user_file/plan.json', 'r') as f:
         plan = json.load(f)
     
     print_plan_with_plan(plan)
@@ -236,8 +236,11 @@ def run_print_plan():
 def clear_task_not_open():
     global list_not_open
     list_not_open = []
+    
 
 if __name__ == '__main__':
+
+    assert os.path.exists('user_file/plan.json'), '未能检测到刷图计划文件.'
 
     run_print_plan()
     run_plan()
