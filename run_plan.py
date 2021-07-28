@@ -55,11 +55,28 @@ def run_plan():
                 logger.info('当日未开放关卡列表：' + str(list_not_open))
                 break # 重新进行优先级遍历
             except ValueError:
-                # 未开放，加入未开放关卡列表中
-                logger.info('关卡 [%s] 未开放, 继续下一关卡' % stage['stage'])
-                list_not_open.append(stage['stage'])
-                logger.info('当日未开放关卡列表：' + str(list_not_open))
-                break # 重新进行优先级遍历
+                logger.info('启动活动关方案')
+                helper.back_to_main()
+                logger.info('进入作战')
+
+                # 活动关特殊定义开始 #
+                activity_partition_map = ['RI-1', 'RI-2', 'RI-TR-1', 'RI-3', 'RI-4', 'RI-ST-1', 'RI-5', 'RI-6', 'RI-7', 'RI-8', 'RI-9']
+                helper.mouse_click([(910,125),(1030,255)])
+                helper.mouse_click([(550,140),(870,390)])
+                time.sleep(4)
+                helper.mouse_click([(1120,330),(1230,350)])
+                # 活动关特殊定义结束 #
+
+                while True:
+                    try:
+                        helper.find_and_tap_stage_by_ocr(partition=None, target=stage['stage'], partition_map=activity_partition_map)
+                    except RuntimeError:
+                        # 活动关识别失败，程序重新尝试识别
+                        logger.info('关卡 [%s] 识别失败, 尝试重新识别' % stage['stage'])
+                    else:
+                        break
+                c_id, remain = helper.module_battle_slim(stage['stage'], 1)
+
             if remain == 1: # 理智不足未进行单次任务执行
                 has_remain_sanity = False
                 # 退出遍历
@@ -195,11 +212,19 @@ def print_sanity_usage(plan):
         sanity_usage = 0
         for task in plan['stages'][now_prior-1]['stages']:
             sanity_usage += task.get('remain', task['count']) * task.get('sanity', 0)
-        hour_rest = sanity_usage / 300 * 24
+        hour_rest = sanity_usage / 240 * 24
+        hour_rest_monthly = sanity_usage // 300 * 24 + sanity_usage % 300 / 10
         if hour_rest >= 24:
-            logger.info("仍需：" + str(sanity_usage) + " 理智  -  " + str(int(hour_rest//24)) + " 天 " + str(int(hour_rest%24)+1) + " 小时")
+            str_hour_rest = str(int(hour_rest//24)) + " 天 " + str(int(hour_rest%24)+1) + " 小时"
         else:
-            logger.info("仍需：" + str(sanity_usage) + " 理智  -  " + str(int(hour_rest%24)+1) + " 小时")
+            str_hour_rest = str(int(hour_rest%24)+1) + " 小时"
+        if hour_rest_monthly >= 24:
+            str_hour_rest_monthly = str(int(hour_rest_monthly//24)) + " 天 " + str(int(hour_rest_monthly%24)+1) + " 小时"
+        else:
+            str_hour_rest_monthly = str(int(hour_rest_monthly%24)+1) + " 小时"
+        logger.info("仍需：" + str(sanity_usage) + " 理智  -  " + str_hour_rest + " / " + str_hour_rest_monthly + " (Prime)")
+
+
 
 def run_print_plan():
 
