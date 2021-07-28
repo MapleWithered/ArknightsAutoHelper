@@ -1,4 +1,12 @@
 @echo off
+
+if not defined TAG (
+    set TAG=1
+    start wt -p "Windows PowerShell" %0
+    :: Windows Terminal 中 cmd 的配置名，我这里是“cmd”
+    exit
+)
+
 chcp>nul 2>nul 65001
 
 rem 切换至 ArknightsAutoHelper 所在位置
