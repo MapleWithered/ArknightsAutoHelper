@@ -16,7 +16,7 @@ def run_plan():
     
     assert os.path.exists('user_file/plan.json'), '未能检测到刷图计划文件.'
 
-    with open('user_file/plan.json', 'r') as f:
+    with open('user_file/plan.json', 'r', encoding='utf-8') as f:
         plan = json.load(f)
 
     assert plan['stages'], "刷图计划文件中未能检测到刷图计划，或格式错误"
@@ -138,7 +138,7 @@ def run_task():
 
 def print_plan():
 
-    with open('user_file/plan.json', 'r') as f:
+    with open('user_file/plan.json', 'r', encoding='utf-8') as f:
         plan = json.load(f)
     
     print_plan_with_plan(plan)
