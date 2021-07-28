@@ -15,7 +15,7 @@ cd>nul 2>nul /D %~dp0
 call venv\Scripts\activate.bat
 
 rem 主任务
-python run_plan_percent.py
+python run_plan_996.py
 
 
 rem 结束进程
