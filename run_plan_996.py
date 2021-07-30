@@ -118,7 +118,14 @@ def run_plan():
                     helper.replay_custom_record(record_name)
                     # 判断支线关卡/剿灭作战
                     if stage['stage'].find('-') != -1:
-                        _, stage_map_linear = get_stage(stage['stage'])
+                        try:
+                            _, stage_map_linear = get_stage(stage['stage'])
+                        except RuntimeError:
+                            # 未开放，加入未开放关卡列表中
+                            logger.info('关卡 [%s] 未开放, 继续下一关卡' % stage['stage'])
+                            list_not_open.append(stage['stage'])
+                            logger.info('当日未开放关卡列表：' + str(list_not_open))
+                            break # 重新进行优先级遍历
                         while True:
                             try:
                                 helper.find_and_tap_stage_by_ocr(partition=None, target=stage['stage'], partition_map=stage_map_linear)
