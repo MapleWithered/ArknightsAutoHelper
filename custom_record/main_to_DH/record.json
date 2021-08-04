@@ -1,12 +1,12 @@
 {
     "back_to_main": true,
-    "description": "从主线一路点击进入RI关卡（章节）",
+    "description": "从主线一路点击进入DH关卡（章节）",
     "prefer_mode": "match_template",
     "records": [
         {
             "img": "step0.png",
             "point": [
-                935,
+                934,
                 162
             ],
             "raise_exception": true,
@@ -18,8 +18,8 @@
         {
             "img": "step1.png",
             "point": [
-                458,
-                145
+                428,
+                568
             ],
             "raise_exception": true,
             "repeat": 1,
@@ -30,8 +30,8 @@
         {
             "img": "step2.png",
             "point": [
-                1163,
-                340
+                948,
+                329
             ],
             "raise_exception": true,
             "repeat": 1,
