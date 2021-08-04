@@ -1,5 +1,6 @@
 from Arknights.helper import logger
 from Arknights.shell_next import _create_helper
+from addons.activity import get_stage
 import config
 import json
 import os
@@ -55,27 +56,87 @@ def run_plan():
                 logger.info('当日未开放关卡列表：' + str(list_not_open))
                 break # 重新进行优先级遍历
             except ValueError:
-                logger.info('启动活动关方案')
+                # 非主线芯片关卡（即，故事集/活动/剿灭）
                 helper.back_to_main()
-                logger.info('进入作战')
-
-                # 活动关特殊定义开始 #
-                activity_partition_map = ['RI-1', 'RI-2', 'RI-TR-1', 'RI-3', 'RI-4', 'RI-ST-1', 'RI-5', 'RI-6', 'RI-7', 'RI-8', 'RI-9']
-                helper.mouse_click([(910,125),(1030,255)])
-                helper.mouse_click([(550,140),(870,390)])
-                time.sleep(4)
-                helper.mouse_click([(1120,330),(1230,350)])
-                # 活动关特殊定义结束 #
-
-                while True:
-                    try:
-                        helper.find_and_tap_stage_by_ocr(partition=None, target=stage['stage'], partition_map=activity_partition_map)
-                    except RuntimeError:
-                        # 活动关识别失败，程序重新尝试识别
-                        logger.info('关卡 [%s] 识别失败, 尝试重新识别' % stage['stage'])
+                # 得到关卡前缀
+                if stage['stage'].rfind('-') == -1:
+                    stage_category = stage['stage']
+                else:
+                    stage_category = stage['stage'][:stage['stage'].rfind('-')]
+                record_name = f"main_to_{stage_category}"
+                # 判断点击路径是否存在
+                if not os.path.exists(f'custom_record/{record_name}/record.json'):
+                    # 不存在点击路径 进行录制
+                    logger.warning(f"当前关卡{stage_category}，未录制点击路径。")
+                    c = input(f'是否录制相应操作记录(需要 MuMu 模拟器)[y/N]:').strip().lower()
+                    if c != 'y':
+                        # 用户不希望录制 当日内忽略此关卡
+                        list_not_open.append(stage['stage'])
+                        logger.info(f"今日将忽略 {stage['stage']} 关卡")
+                        break # 重新进行优先级遍历
+                    # 希望录制 判断支线关卡/剿灭作战
+                    if stage['stage'].find('-') != -1:
+                        # 支线活动关卡
+                        wait_seconds_after_touch = 2
+                        print('录制到进入活动关卡选择界面即可, 无需点击具体的某个关卡.')
+                        print(f'如果需要重新录制, 删除 custom_record 下的 {record_name} 文件夹即可.')
+                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+                        print(f'准备开始录制 {record_name}...')
+                        helper.create_custom_record(record_name, roi_size=64,
+                                                        description=f"从主线一路点击进入{stage_category}关卡（章节）",
+                                                        wait_seconds_after_touch=wait_seconds_after_touch)
                     else:
-                        break
-                c_id, remain = helper.module_battle_slim(stage['stage'], 1)
+                        # 剿灭作战
+                        wait_seconds_after_touch = 2
+                        print('录制到出现开始行动按钮为止。')
+                        print(f'如果需要重新录制, 删除 custom_record 下的 {record_name} 文件夹即可.')
+                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+                        print(f'准备开始录制 {record_name}...')
+                        helper.create_custom_record(record_name, roi_size=64,
+                                                        description=f"从主线一路点击进入{stage_category}关卡",
+                                                        wait_seconds_after_touch=wait_seconds_after_touch)
+                    # 录完了 刷一波
+                    if stage['stage'].find('-') != -1:
+                        _, stage_map_linear = get_stage(stage['stage'])
+                        while True:
+                            try:
+                                helper.find_and_tap_stage_by_ocr(partition=None, target=stage['stage'], partition_map=stage_map_linear)
+                            except RuntimeError:
+                                # 活动关识别失败，程序重新尝试识别
+                                logger.info('关卡 [%s] 识别失败, 尝试重新识别' % stage['stage'])
+                            else:
+                                break
+                        c_id, remain = helper.module_battle_slim(stage['stage'], 1)
+                    else:
+                        c_id, remain = helper.module_battle_slim(None, 1)
+                else:
+                    # 存在点击路径 进行点击
+                    helper.replay_custom_record(record_name)
+                    # 判断支线关卡/剿灭作战
+                    if stage['stage'].find('-') != -1:
+                        try:
+                            _, stage_map_linear = get_stage(stage['stage'])
+                        except RuntimeError:
+                            # 未开放，加入未开放关卡列表中
+                            logger.info('关卡 [%s] 未开放, 继续下一关卡' % stage['stage'])
+                            list_not_open.append(stage['stage'])
+                            logger.info('当日未开放关卡列表：' + str(list_not_open))
+                            break # 重新进行优先级遍历
+                        while True:
+                            try:
+                                helper.find_and_tap_stage_by_ocr(partition=None, target=stage['stage'], partition_map=stage_map_linear)
+                            except RuntimeError:
+                                # 活动关识别失败，程序重新尝试识别
+                                logger.info('关卡 [%s] 识别失败, 尝试重新识别' % stage['stage'])
+                            else:
+                                break
+                        c_id, remain = helper.module_battle_slim(stage['stage'], 1)
+                    else:
+                        c_id, remain = helper.module_battle_slim(None, 1)
 
             if remain == 1: # 理智不足未进行单次任务执行
                 has_remain_sanity = False
@@ -83,7 +144,7 @@ def run_plan():
                 break
             else: # 成功执行一次任务
                 stage['remain'] = stage.get('remain', stage['count']) - 1
-                with open('user_file/plan.json', 'w') as f:
+                with open('user_file/plan.json', 'w', encoding='utf-8') as f:
                     json.dump(plan, f, indent=4, sort_keys=False, ensure_ascii = False)
                 break # 重新进行优先级遍历
 
@@ -158,9 +219,9 @@ def get_good_stage_id(stages_same_prior):
 
 def print_plan_with_plan(plan):
     logger.warning("当前刷图计划：")
-    logger.info("-----------------------------------------------------------------------------------")
-    logger.info("优先  " + "关卡".ljust(8) + "理智".ljust(5) + "计划".ljust(5) + "剩余".ljust(5) + "余比".ljust(8) + "备注")
-    logger.info("-----------------------------------------------------------------------------------")
+    logger.info("---------------------------------------------------------------------------------------")
+    logger.info("优先  " + "关卡".ljust(12) + "理智".ljust(5) + "计划".ljust(5) + "剩余".ljust(5) + "余比".ljust(8) + "备注")
+    logger.info("---------------------------------------------------------------------------------------")
     prior = 1
     ok_task_used = False
     for tasks_same_prior in plan['stages']:
@@ -179,10 +240,10 @@ def print_plan_with_plan(plan):
             else:
                 status_char = ' '
             if fini_percent == 100 or task['count'] == 9999 or fini_percent == 0:
-                logger.info(str(prior).ljust(6) + task['stage'].ljust(10) + str(task.get('sanity', '')).ljust(7) + str(task['count']).ljust(7) + str(remain).ljust(7) + " --  " + status_char + "    " + task['//'])
+                logger.info(str(prior).ljust(6) + task['stage'].ljust(14-int((len(task['stage'].encode('utf-8'))-len(task['stage']))/2)) + str(task.get('sanity', '')).ljust(7) + str(task['count']).ljust(7) + str(remain).ljust(7) + " --  " + status_char + "    " + task['//'])
             else:
-                logger.info(str(prior).ljust(6) + task['stage'].ljust(10) + str(task.get('sanity', '')).ljust(7) + str(task['count']).ljust(7) + str(remain).ljust(7) + str(fini_percent).rjust(3) + "% " + status_char + "    " + task['//'])
-        logger.info("-----------------------------------------------------------------------------------")
+                logger.info(str(prior).ljust(6) + task['stage'].ljust(14-int((len(task['stage'].encode('utf-8'))-len(task['stage']))/2)) + str(task.get('sanity', '')).ljust(7) + str(task['count']).ljust(7) + str(remain).ljust(7) + str(fini_percent).rjust(3) + "% " + status_char + "    " + task['//'])
+        logger.info("---------------------------------------------------------------------------------------")
         prior += 1
 
 def print_sanity_usage(plan):
