@@ -1036,7 +1036,8 @@ class ArknightsHelper(object):
 
         with open(os.path.join(record_dir, 'record.json'), 'r', encoding='utf-8') as f:
             record_data = json.load(f)
-        logger.info(f'record description: {record_data.get("description")}')
+        #logger.info(f'record description: {record_data.get("description")}')
+        logger.info(f'即将{record_data.get("description")}')
         records = record_data['records']
         if mode is None:
             mode = record_data.get('prefer_mode', 'match_template')
@@ -1050,7 +1051,9 @@ class ArknightsHelper(object):
         record_height = record_data['screen_height']
         ratio = record_height / self.viewport[1]
         x, y = 0, 0
+        counter = 0
         for record in records:
+            counter += 1
             if record['type'] == 'tap':
                 repeat = record.get('repeat', 1)
                 raise_exception = record.get('raise_exception', True)
@@ -1065,7 +1068,8 @@ class ArknightsHelper(object):
                         (x, y), r = imgreco.imgops.match_template(gray_screen, template)
                         x = x // ratio
                         y = y // ratio
-                        logger.info(f'(x, y), r, record: {(x, y), r, record}')
+                        #logger.info(f'(x, y), r, record: {(x, y), r, record}')
+                        logger.info(f'进行第{counter}步点击')
                         if r < threshold:
                             if raise_exception:
                                 logger.error('无法识别的图像: ' + record['img'])
