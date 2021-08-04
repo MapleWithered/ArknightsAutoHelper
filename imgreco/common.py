@@ -38,6 +38,21 @@ def check_nav_button(img):
     logger.logtext('check_nav_button mse=%f' % mse)
     return mse < 800
 
+def get_nav_button_callout_menu(viewport):
+    vw, vh = util.get_vwvh(viewport)
+    return (24.166 * vh, 2.222 * vh, 28.75 * vh, 7.917 * vh)
+
+def get_nav_button_goto_main(img):
+    scale = img.height / 720
+    img = imgops.scale_to_height(img.convert('RGB'), 720)
+    imgmat = np.asarray(img)
+    (x, y), r = imgops.match_template(imgmat, resources.load_image_cached('common/goto_main.png', 'RGB'), method=cv.TM_SQDIFF_NORMED)
+    x = x * scale
+    y = y * scale
+    if r < 0.025:
+        return (x, y, 61, 152)
+    else:
+        return (-1, -1, -1, -1)
 
 def get_nav_button_back_rect(viewport):
     vw, vh = util.get_vwvh(viewport)

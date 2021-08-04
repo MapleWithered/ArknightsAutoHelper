@@ -514,6 +514,23 @@ class ArknightsHelper(object):
             if imgreco.main.check_main(screenshot):
                 break
 
+            # 检查是否能一键直达主页
+            button_goto_main = imgreco.common.get_nav_button_goto_main(screenshot)
+            if button_goto_main != (-1, -1, -1, -1):
+                logger.info('发现首页按钮，点击回到首页')
+                self.tap_rect(button_goto_main)
+                self.__wait(2)
+                # 返回主页之后重新检查
+                continue
+
+            # 检查是否能够打开返回菜单
+            if imgreco.common.check_nav_button(screenshot):
+                logger.info('发现导航菜单，尝试呼出菜单')
+                self.tap_rect(imgreco.common.get_nav_button_callout_menu(self.viewport))
+                self.__wait(TINY_WAIT)
+                # 展开菜单之后重新检查
+                continue
+
             # 检查是否有返回按钮
             if imgreco.common.check_nav_button(screenshot):
                 logger.info('发现返回按钮，点击返回')
