@@ -158,10 +158,6 @@ def run_friend():
 
     logger.warning('开始访问好友')
     helper.get_credit()
-    helper.mouse_click([(24,17),(150,55)])
-    helper.wait(2)
-    helper.mouse_click([(650,480),(1265,536)])
-    helper.wait(5)
     helper.back_to_main()
 
 def run_ship():
