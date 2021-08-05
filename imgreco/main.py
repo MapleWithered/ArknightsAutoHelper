@@ -1,5 +1,6 @@
 from fractions import Fraction
 
+import cv2 as cv
 import numpy as np
 from PIL import Image
 
@@ -108,6 +109,39 @@ def get_next_friend_build(img):
         # FIXME: implement with feature matching?
         raise NotImplementedError('unsupported aspect ratio')
         
+def get_building_entry(img):
+    return [x[0] for x in imgops.find_homography(resources.load_image_cached('main/base.png', 'L'), img)]
+
+def get_building_notification(img):
+    try:
+        hsv = np.asarray(img)
+        hsv = cv.cvtColor(hsv, cv.COLOR_RGB2HSV)
+        # print(hsv[90][1230])
+        hsv = cv.erode(hsv, None, iterations=1)
+        inRange_hsv = cv.inRange(hsv, np.array([97,202,216]), np.array([101,208,222]))
+        # cv.imshow('result', inRange_hsv)
+        # while True:
+        #     cv.waitKey(0)
+        cnts = cv.findContours(inRange_hsv.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2]
+        c = max(cnts, key=cv.contourArea)
+        rect = cv.minAreaRect(c)
+        box = cv.boxPoints(rect)
+        # print(rect[1][0]*rect[1][1])
+        # img_array = np.asarray(img)
+        # cv.drawContours(img_array, [np.int0(box)], -1, (0, 255, 255), 2)
+        # cv.imshow('result', img_array)
+        # print(box)
+        # while True:
+        #     cv.waitKey(0)
+        area = rect[1][0]*rect[1][1]
+        if area > 500:
+            return (np.array((box[0][0], box[0][1])), np.array((box[1][0], box[1][1])),
+             np.array((box[2][0], box[2][1])), np.array((box[3][0], box[3][1])))
+        else:
+            return -1
+    except Exception as e:
+        return -1
+    
 def get_back_my_build(img):
     """
     :returns: [0][1]

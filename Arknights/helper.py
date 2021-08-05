@@ -860,33 +860,46 @@ class ArknightsHelper(object):
         logger.info("清空基建")
         self.back_to_main()
         screenshot = self.adb.screenshot()
-        logger.info('进入我的基建')
-        self.tap_quadrilateral(imgreco.main.get_back_my_build(screenshot))
-        self.__wait(MEDIUM_WAIT + 3)
-        self.tap_quadrilateral(imgreco.main.get_my_build_task(screenshot))
+        logger.info('进入罗德岛基建')
+        self.tap_quadrilateral(imgreco.main.get_building_entry(screenshot))
+        self.__wait(MEDIUM_WAIT)
+        # 识别基建右上角小按钮
+        screenshot = self.adb.screenshot()
+        recoresult = imgreco.main.get_building_notification(screenshot)
+        if recoresult != -1:
+            logger.info("基建存在待收取项目，点击右上角小按钮")
+            self.tap_quadrilateral(recoresult)
+        else:
+            logger.info("基建无待收取项目")
+            self.back_to_main()
+            return
         self.__wait(SMALL_WAIT)
-        logger.info('收取制造产物')
-        self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
-        self.__wait(SMALL_WAIT)
-        logger.info('清理贸易订单')
-        self.tap_quadrilateral(imgreco.main.get_my_sell_task_1(screenshot))
-        self.__wait(SMALL_WAIT + 1)
-        self.tap_quadrilateral(imgreco.main.get_my_sell_tasklist(screenshot))
-        self.__wait(SMALL_WAIT -1 )
-        sell_count = 0
-        while sell_count <= 6:
-            screenshot = self.adb.screenshot()
-            self.tap_quadrilateral(imgreco.main.get_my_sell_task_main(screenshot))
+        # 连点下方的按钮
+        logger.info('收取基建产物')
+        for i in range(5):
+            self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
             self.__wait(TINY_WAIT)
-            sell_count = sell_count + 1
-        self.tap_quadrilateral(imgreco.main.get_my_sell_task_2(screenshot))
-        self.__wait(SMALL_WAIT - 1)
-        sell_count = 0
-        while sell_count <= 6:
-            screenshot = self.adb.screenshot()
-            self.tap_quadrilateral(imgreco.main.get_my_sell_task_main(screenshot))
-            self.__wait(TINY_WAIT)
-            sell_count = sell_count + 1
+        # self.tap_quadrilateral(imgreco.main.get_my_build_task_clear(screenshot))
+        # self.__wait(SMALL_WAIT)
+        # logger.info('清理贸易订单')
+        # self.tap_quadrilateral(imgreco.main.get_my_sell_task_1(screenshot))
+        # self.__wait(SMALL_WAIT + 1)
+        # self.tap_quadrilateral(imgreco.main.get_my_sell_tasklist(screenshot))
+        # self.__wait(SMALL_WAIT -1 )
+        # sell_count = 0
+        # while sell_count <= 6:
+        #     screenshot = self.adb.screenshot()
+        #     self.tap_quadrilateral(imgreco.main.get_my_sell_task_main(screenshot))
+        #     self.__wait(TINY_WAIT)
+        #     sell_count = sell_count + 1
+        # self.tap_quadrilateral(imgreco.main.get_my_sell_task_2(screenshot))
+        # self.__wait(SMALL_WAIT - 1)
+        # sell_count = 0
+        # while sell_count <= 6:
+        #     screenshot = self.adb.screenshot()
+        #     self.tap_quadrilateral(imgreco.main.get_my_sell_task_main(screenshot))
+        #     self.__wait(TINY_WAIT)
+        #     sell_count = sell_count + 1
         self.back_to_main()
         logger.info("基建领取完毕")
 
