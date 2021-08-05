@@ -591,7 +591,7 @@ class ArknightsHelper(object):
         if stage_path.is_stage_supported_ocr(c_id):
             self.goto_stage_by_ocr(c_id)
         else:
-            logger.error('不支持的关卡：%s', c_id)
+            logger.error('非标关卡：%s', c_id)
             raise ValueError(c_id)
         return self.module_battle_slim(c_id,
                                 set_count=set_count,
