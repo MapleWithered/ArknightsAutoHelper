@@ -269,9 +269,9 @@ class ArknightsHelper(object):
                 if count != set_count:
                     # 2019.10.06 更新逻辑后，提前点击后等待时间包括企鹅物流
                     if config.reporter:
-                        self.__wait(SMALL_WAIT, MANLIKE_FLAG=True)
+                        self.__wait(SMALL_WAIT, MANLIKE_FLAG=True, allow_skip=True)
                     else:
-                        self.__wait(BIG_WAIT, MANLIKE_FLAG=True)
+                        self.__wait(BIG_WAIT, MANLIKE_FLAG=True, allow_skip=True)
         except StopIteration:
             # count: succeeded count
             logger.error('未能进行第 %d 次作战', count + 1)
@@ -465,12 +465,12 @@ class ArknightsHelper(object):
             reportresult = penguin_stats.reporter.ReportResult.NotReported
             try:
                 # 掉落识别
-                drops = imgreco.end_operation.recognize(smobj.prepare_reco['style'], screenshot)
+                drops = imgreco.end_operation.recognize(smobj.prepare_reco['style'], screenshot, True)
                 logger.debug('%s', repr(drops))
                 logger.info('掉落识别结果：%s', format_recoresult(drops))
                 log_total = len(self.loots)
                 for _, group in drops['items']:
-                    for name, qty in group:
+                    for name, qty, item_type in group:
                         if name is not None and qty is not None:
                             self.loots[name] = self.loots.get(name, 0) + qty
                 self.frontend.notify("combat-result", drops)
@@ -908,39 +908,39 @@ class ArknightsHelper(object):
 
     def get_inventory_items(self, show_item_name=False):
         import imgreco.inventory
-        all_items_map = {}
-        if show_item_name:
-            import penguin_stats.arkplanner
-            all_items_map = penguin_stats.arkplanner.get_all_items_map()
 
         self.back_to_main()
         logger.info("进入仓库")
         self.tap_rect(imgreco.inventory.get_inventory_rect(self.viewport))
 
-        items_map = {}
+        items = []
         last_screen_items = None
-        move = -randint(self.viewport[0] // 4, self.viewport[0] // 3)
+        move = -randint(self.viewport[0] // 5, self.viewport[0] // 4)
         self.__swipe_screen(move)
+        self.adb.touch_swipe2((self.viewport[0] // 2, self.viewport[1] - 50), (1, 1), 10)
         screenshot = self.adb.screenshot()
         while True:
-            move = -randint(self.viewport[0] // 3.5, self.viewport[0] // 2.5)
+            move = -randint(self.viewport[0] // 6, self.viewport[0] // 5)
             self.__swipe_screen(move)
-            screen_items_map = imgreco.inventory.get_all_item_in_screen(screenshot)
-            if last_screen_items == screen_items_map.keys():
+            self.adb.touch_swipe2((self.viewport[0]//2, self.viewport[1] - 50), (1, 1), 10)
+            screen_items = imgreco.inventory.get_all_item_details_in_screen(screenshot)
+            screen_item_ids = set([item['itemId'] for item in screen_items])
+            screen_items_map = {item['itemId']: item['quantity'] for item in screen_items}
+            if last_screen_items == screen_item_ids:
                 logger.info("读取完毕")
                 break
             if show_item_name:
-                name_map = {all_items_map[k]['name']: screen_items_map[k] for k in screen_items_map.keys()}
+                name_map = {item['itemName']: item['quantity'] for item in screen_items}
                 logger.info('name_map: %s' % name_map)
             else:
                 logger.info('screen_items_map: %s' % screen_items_map)
-            last_screen_items = screen_items_map.keys()
-            items_map.update(screen_items_map)
+            last_screen_items = screen_item_ids
+            items += screen_items
             # break
             screenshot = self.adb.screenshot()
         if show_item_name:
-            logger.info('items_map: %s' % {all_items_map[k]['name']: items_map[k] for k in items_map.keys()})
-        return items_map
+            logger.info('items_map: %s' % {item['itemName']: item['quantity'] for item in items})
+        return {item['itemId']: item['quantity'] for item in items}
 
     def __swipe_screen(self, move, rand=100, origin_x=None, origin_y=None):
         origin_x = (origin_x or self.viewport[0] // 2) + randint(-rand, rand)
