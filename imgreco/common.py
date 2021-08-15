@@ -49,8 +49,8 @@ def get_nav_button_goto_main(img):
     (x, y), r = imgops.match_template(imgmat, resources.load_image_cached('common/goto_main.png', 'RGB'), method=cv.TM_SQDIFF_NORMED)
     x = x * scale
     y = y * scale
-    if r < 0.025:
-        return (x, y, 61, 152)
+    if r < 0.1:
+        return (x, y, 61*scale, 152*scale)
     else:
         return (-1, -1, -1, -1)
 

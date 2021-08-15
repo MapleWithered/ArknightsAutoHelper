@@ -507,7 +507,7 @@ class ArknightsHelper(object):
     def back_to_main(self):  # 回到主页
         logger.info("正在返回主页")
         retry_count = 0
-        max_retry = 3
+        max_retry = 10
         while True:
             screenshot = self.adb.screenshot()
 
