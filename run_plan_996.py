@@ -1,13 +1,13 @@
-from Arknights.helper import logger
-from Arknights.shell_next import _create_helper
-from addons.activity import get_stage
-import config
+import datetime
 import json
 import os
 import time
-import datetime
 
 import schedule
+
+from Arknights.helper import logger
+from Arknights.shell_next import _create_helper
+from addons.activity import get_stage
 
 list_not_open = []
 
@@ -38,7 +38,7 @@ def run_plan():
                 stage = stages_same_prior[i]
                 remain_ratio = stage.get('remain', stage['count']) / stage['count']
                 if stage['stage'] not in list_not_open and stage.get('remain', stage[
-                    'count']) > 0 and remain_ratio > max_remain_ratio:
+                        'count']) > 0 and remain_ratio > max_remain_ratio:
                     stage_ok_id = i
                     max_remain_ratio = remain_ratio
             if stage_ok_id == -1:
@@ -47,7 +47,7 @@ def run_plan():
             stage = stages_same_prior[stage_ok_id]
             remain = stage.get('remain', stage['count'])
             logger.warning('优先级: %s, 关卡 [%s], 总计划: %s, 剩余次数: %s, 备注: %s' % (
-            priority_id, stage['stage'], stage['count'], remain, stage['//']))
+                priority_id, stage['stage'], stage['count'], remain, stage['//']))
             try:
                 # 执行未完成的开放关卡一次
                 c_id, remain = helper.module_battle(stage['stage'], 1)
@@ -218,7 +218,7 @@ def print_plan_with_plan(plan):
                 status_char = '√'
             elif task['stage'] in list_not_open:
                 status_char = '×'
-            elif task_id == ok_id and ok_task_used == False:
+            elif task_id == ok_id and ok_task_used is False:
                 status_char = '○'
                 ok_task_used = True
             else:
@@ -248,15 +248,18 @@ def print_sanity_usage(plan):
             remain = task.get('remain', task['count'])
             fini_percent = int((remain / task['count']) * 100)
             if fini_percent == 0:
-                status_char = '√'
+                # status_char = '√'
+                ...
             elif task['stage'] in list_not_open:
-                status_char = '×'
-            elif task_id == ok_id and ok_task_used == False:
-                status_char = '○'
+                # status_char = '×'
+                ...
+            elif task_id == ok_id and ok_task_used is False:
+                # status_char = '○'
                 now_prior = prior
                 ok_task_used = True
             else:
-                status_char = ' '
+                # status_char = ' '
+                ...
         prior += 1
         if ok_task_used:
             break
