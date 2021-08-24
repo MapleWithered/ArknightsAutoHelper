@@ -101,8 +101,8 @@ def get_stage(target_stage_code):
             raise RuntimeError(f'无效的关卡: {target_stage_code}')
         target_stage = stage_code_map[target_stage_code]
         print(target_stage)
-        if not check_activity_available(target_stage['zoneId']):
-            raise RuntimeError('活动未开放')
+        # if not check_activity_available(target_stage['zoneId']):
+        #     raise RuntimeError('活动未开放')
     stage_linear = zone_linear_map.get(target_stage['zoneId'])
     # print(stage_linear)
     return target_stage, stage_linear
