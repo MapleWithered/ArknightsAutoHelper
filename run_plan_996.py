@@ -8,6 +8,7 @@ import schedule
 from Arknights.helper import logger
 from Arknights.shell_next import _create_helper
 from addons.activity import get_stage
+from Arknights.flags import *
 
 list_not_open = []
 
@@ -108,6 +109,7 @@ def run_plan():
                             try:
                                 helper.find_and_tap_stage_by_ocr(partition=None, target=stage['stage'],
                                                                  partition_map=stage_map_linear)
+                                helper.wait(TINY_WAIT, MANLIKE_FLAG=False)
                             except RuntimeError:
                                 # 活动关识别失败，程序重新尝试识别
                                 logger.info('关卡 [%s] 识别失败, 尝试重新识别' % stage['stage'])
@@ -133,6 +135,7 @@ def run_plan():
                             try:
                                 helper.find_and_tap_stage_by_ocr(partition=None, target=stage['stage'],
                                                                  partition_map=stage_map_linear)
+                                helper.wait(TINY_WAIT, MANLIKE_FLAG=False)
                             except RuntimeError:
                                 # 活动关识别失败，程序重新尝试识别
                                 logger.info('关卡 [%s] 识别失败, 尝试重新识别' % stage['stage'])
