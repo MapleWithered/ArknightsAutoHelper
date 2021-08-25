@@ -80,7 +80,7 @@ def run_plan():
                     # 希望录制 判断支线关卡/剿灭作战
                     if stage['stage'].find('-') != -1:
                         # 支线活动关卡
-                        wait_seconds_after_touch = 2
+                        wait_seconds_after_touch = 4
                         print('录制到进入活动关卡选择界面即可, 无需点击具体的某个关卡.')
                         print(f'如果需要重新录制, 删除 custom_record 下的 {record_name} 文件夹即可.')
                         print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
@@ -92,7 +92,7 @@ def run_plan():
                                                     wait_seconds_after_touch=wait_seconds_after_touch)
                     else:
                         # 剿灭作战
-                        wait_seconds_after_touch = 2
+                        wait_seconds_after_touch = 4
                         print('录制到出现开始行动按钮为止。')
                         print(f'如果需要重新录制, 删除 custom_record 下的 {record_name} 文件夹即可.')
                         print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
