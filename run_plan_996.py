@@ -120,7 +120,8 @@ def run_plan():
                         c_id, remain = helper.module_battle_slim(None, 1)
                 else:
                     # 存在点击路径 进行点击
-                    helper.replay_custom_record(record_name)
+                    clickmode = 'point' if plan.get("1280x720", False) else 'match_template'
+                    helper.replay_custom_record(record_name, mode = clickmode)
                     # 判断支线关卡/剿灭作战
                     if stage['stage'].find('-') != -1:
                         try:
