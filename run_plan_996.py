@@ -302,6 +302,10 @@ if __name__ == '__main__':
     run_print_plan()
     run_plan()
 
+    run_ship()
+    run_friend()
+    run_task()
+
     schedule.clear()
 
     schedule.every(1).hours.at(":10").do(run_ship)
