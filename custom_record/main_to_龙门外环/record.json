@@ -13,7 +13,7 @@
             "repeat": 1,
             "threshold": 0.7,
             "type": "tap",
-            "wait_seconds_after_touch": 2
+            "wait_seconds_after_touch": 4
         },
         {
             "img": "step1.png",
@@ -25,7 +25,7 @@
             "repeat": 1,
             "threshold": 0.7,
             "type": "tap",
-            "wait_seconds_after_touch": 2
+            "wait_seconds_after_touch": 4
         },
         {
             "img": "step2.png",
@@ -37,7 +37,7 @@
             "repeat": 1,
             "threshold": 0.7,
             "type": "tap",
-            "wait_seconds_after_touch": 2
+            "wait_seconds_after_touch": 4
         },
         {
             "img": "step3.png",
@@ -49,7 +49,7 @@
             "repeat": 1,
             "threshold": 0.7,
             "type": "tap",
-            "wait_seconds_after_touch": 2
+            "wait_seconds_after_touch": 4
         },
         {
             "img": "step4.png",
@@ -61,7 +61,7 @@
             "repeat": 1,
             "threshold": 0.7,
             "type": "tap",
-            "wait_seconds_after_touch": 2
+            "wait_seconds_after_touch": 4
         },
         {
             "img": "step5.png",
@@ -73,7 +73,7 @@
             "repeat": 1,
             "threshold": 0.7,
             "type": "tap",
-            "wait_seconds_after_touch": 2
+            "wait_seconds_after_touch": 4
         }
     ],
     "screen_height": 720,
