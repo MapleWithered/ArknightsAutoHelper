@@ -42,7 +42,7 @@ venv\Scripts\activate.bat
 source venv/bin/activate
 #### venv end
 
-pip install -r requirements.txt
+pip install -r requirements-ex.txt
 ```
 
 #### 二进制包（Windows）
