@@ -1,0 +1,81 @@
+{
+    "back_to_main": true,
+    "description": "从主线一路点击进入龙门市区关卡",
+    "prefer_mode": "match_template",
+    "records": [
+        {
+            "img": "step0.png",
+            "point": [
+                937,
+                161
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step1.png",
+            "point": [
+                1003,
+                677
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step2.png",
+            "point": [
+                292,
+                530
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step3.png",
+            "point": [
+                641,
+                360
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step4.png",
+            "point": [
+                1118,
+                655
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step5.png",
+            "point": [
+                962,
+                360
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        }
+    ],
+    "screen_height": 720,
+    "screen_width": 1280
+}
