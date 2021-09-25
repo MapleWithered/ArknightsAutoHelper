@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import time
+from ruamel import yaml
 
 import schedule
 
@@ -10,17 +11,42 @@ from Arknights.shell_next import _create_helper
 from addons.activity import get_stage
 from Arknights.flags import *
 
-list_not_open = []
+stages_not_open = []
+
+path_plan = 'user_file/plan.json'
+path_plan_yaml = 'user_file/plan.yaml'
+path_aog = 'user_file/aog.json'
+path_config = 'user_file/config.json'
+
+helper, _ = _create_helper()
+
+
+def load_plan_json():
+    assert os.path.exists(path_plan), '未能检测到刷图计划文件.'
+    with open(path_plan, 'r', encoding='utf-8') as f:
+        plan = json.load(f)
+    return plan
+
+
+def dump_plan_json(plan):
+    with open(path_plan, 'w', encoding='utf-8') as f:
+        json.dump(plan, f, indent=4, sort_keys=False, ensure_ascii=False)
+
+
+def load_plan_yaml():
+    assert os.path.exists(path_plan_yaml), '未能检测到刷图计划文件.'
+    with open(path_plan_yaml, 'r', encoding='utf-8') as f:
+        plan = yaml.load(f.read(), Loader=yaml.RoundTripLoader)
+        return plan
+
+
+def dump_plan_yaml(plan):
+    with open(path_plan_yaml, 'w', encoding='utf-8') as f:
+        yaml.dump(plan, f, Dumper=yaml.RoundTripDumper, indent=4, allow_unicode=True, encoding='utf-8')
 
 
 def run_plan():
-    helper, _ = _create_helper()
-
-    assert os.path.exists('user_file/plan.json'), '未能检测到刷图计划文件.'
-
-    with open('user_file/plan.json', 'r', encoding='utf-8') as f:
-        plan = json.load(f)
-
+    plan = load_plan_yaml()
     assert plan['stages'], "刷图计划文件中未能检测到刷图计划，或格式错误"
 
     logger.warning('开始刷图')
@@ -31,15 +57,15 @@ def run_plan():
         priority_id = 0
         for priority in plan['stages']:
             priority_id += 1
-            stages_same_prior = priority['stages']
+            stages_same_prior = priority
             # 找出符合要求的关卡：余比最高的开放关卡
             stage_ok_id = -1
             max_remain_ratio = 0
             for i in range(len(stages_same_prior)):
                 stage = stages_same_prior[i]
                 remain_ratio = stage.get('remain', stage['count']) / stage['count']
-                if stage['stage'] not in list_not_open and stage.get('remain', stage[
-                        'count']) > 0 and remain_ratio > max_remain_ratio:
+                if stage['stage'] not in stages_not_open and stage.get('remain', stage[
+                    'count']) > 0 and remain_ratio > max_remain_ratio:
                     stage_ok_id = i
                     max_remain_ratio = remain_ratio
             if stage_ok_id == -1:
@@ -55,8 +81,8 @@ def run_plan():
             except RuntimeError:
                 # 未开放，加入未开放关卡列表中
                 logger.info('关卡 [%s] 未开放, 继续下一关卡' % stage['stage'])
-                list_not_open.append(stage['stage'])
-                logger.info('当日未开放关卡列表：' + str(list_not_open))
+                stages_not_open.append(stage['stage'])
+                logger.info('当日未开放关卡列表：' + str(stages_not_open))
                 break  # 重新进行优先级遍历
             except ValueError:
                 # 非主线芯片关卡（即，故事集/活动/剿灭）
@@ -74,7 +100,7 @@ def run_plan():
                     c = input(f'是否录制相应操作记录(需要 MuMu 模拟器)[y/N]:').strip().lower()
                     if c != 'y':
                         # 用户不希望录制 当日内忽略此关卡
-                        list_not_open.append(stage['stage'])
+                        stages_not_open.append(stage['stage'])
                         logger.info(f"今日将忽略 {stage['stage']} 关卡")
                         break  # 重新进行优先级遍历
                     # 希望录制 判断支线关卡/剿灭作战
@@ -121,7 +147,7 @@ def run_plan():
                 else:
                     # 存在点击路径 进行点击
                     clickmode = 'point' if plan.get("1280x720", False) else 'match_template'
-                    helper.replay_custom_record(record_name, mode = clickmode)
+                    helper.replay_custom_record(record_name, mode=clickmode)
                     # 判断支线关卡/剿灭作战
                     if stage['stage'].find('-') != -1:
                         try:
@@ -129,8 +155,8 @@ def run_plan():
                         except RuntimeError:
                             # 未开放，加入未开放关卡列表中
                             logger.info('关卡 [%s] 未开放, 继续下一关卡' % stage['stage'])
-                            list_not_open.append(stage['stage'])
-                            logger.info('当日未开放关卡列表：' + str(list_not_open))
+                            stages_not_open.append(stage['stage'])
+                            logger.info('当日未开放关卡列表：' + str(stages_not_open))
                             break  # 重新进行优先级遍历
                         while True:
                             try:
@@ -152,8 +178,7 @@ def run_plan():
                 break
             else:  # 成功执行一次任务
                 stage['remain'] = stage.get('remain', stage['count']) - 1
-                with open('user_file/plan.json', 'w', encoding='utf-8') as f:
-                    json.dump(plan, f, indent=4, sort_keys=False, ensure_ascii=False)
+                dump_plan_yaml(plan)
                 break  # 重新进行优先级遍历
 
     helper.back_to_main()
@@ -185,8 +210,7 @@ def run_task():
 
 
 def print_plan():
-    with open('user_file/plan.json', 'r', encoding='utf-8') as f:
-        plan = json.load(f)
+    plan = load_plan_yaml()
 
     print_plan_with_plan(plan)
     print_sanity_usage(plan)
@@ -198,8 +222,8 @@ def get_good_stage_id(stages_same_prior):
     for i in range(len(stages_same_prior)):
         stage = stages_same_prior[i]
         remain_ratio = stage.get('remain', stage['count']) / stage['count']
-        if stage['stage'] not in list_not_open and stage.get('remain',
-                                                             stage['count']) > 0 and remain_ratio > max_remain_ratio:
+        if stage['stage'] not in stages_not_open and stage.get('remain',
+                                                               stage['count']) > 0 and remain_ratio > max_remain_ratio:
             stage_ok_id = i
             max_remain_ratio = remain_ratio
     return stage_ok_id
@@ -213,14 +237,14 @@ def print_plan_with_plan(plan):
     prior = 1
     ok_task_used = False
     for tasks_same_prior in plan['stages']:
-        stages_same_prior = tasks_same_prior['stages']
+        stages_same_prior = tasks_same_prior
         ok_id = get_good_stage_id(stages_same_prior)
         for task_id, task in enumerate(stages_same_prior):
             remain = task.get('remain', task['count'])
             fini_percent = int((remain / task['count']) * 100)
             if fini_percent == 0:
                 status_char = '√'
-            elif task['stage'] in list_not_open:
+            elif task['stage'] in stages_not_open:
                 status_char = '×'
             elif task_id == ok_id and ok_task_used is False:
                 status_char = '○'
@@ -246,7 +270,7 @@ def print_sanity_usage(plan):
     now_prior = -1
     ok_task_used = False
     for tasks_same_prior in plan['stages']:
-        stages_same_prior = tasks_same_prior['stages']
+        stages_same_prior = tasks_same_prior
         ok_id = get_good_stage_id(stages_same_prior)
         for task_id, task in enumerate(stages_same_prior):
             remain = task.get('remain', task['count'])
@@ -254,7 +278,7 @@ def print_sanity_usage(plan):
             if fini_percent == 0:
                 # status_char = '√'
                 ...
-            elif task['stage'] in list_not_open:
+            elif task['stage'] in stages_not_open:
                 # status_char = '×'
                 ...
             elif task_id == ok_id and ok_task_used is False:
@@ -269,7 +293,7 @@ def print_sanity_usage(plan):
             break
     if now_prior != -1:
         sanity_usage = 0
-        for task in plan['stages'][now_prior - 1]['stages']:
+        for task in plan['stages'][now_prior - 1]:
             sanity_usage += task.get('remain', task['count']) * task.get('sanity', 0)
         hour_rest = sanity_usage / 240 * 24
         hour_rest_monthly = sanity_usage // 300 * 24 + sanity_usage % 300 / 10
@@ -292,13 +316,13 @@ def run_print_plan():
 
 
 def clear_task_not_open():
-    global list_not_open
-    list_not_open = []
+    global stages_not_open
+    stages_not_open = []
 
 
 if __name__ == '__main__':
 
-    assert os.path.exists('user_file/plan.json'), '未能检测到刷图计划文件.'
+    assert os.path.exists(path_plan), '未能检测到刷图计划文件.'
 
     run_print_plan()
     run_plan()

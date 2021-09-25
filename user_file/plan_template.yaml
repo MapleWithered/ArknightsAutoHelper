@@ -1,0 +1,33 @@
+__idle_stage: CE-5
+refill_ap_with_item: false
+refill_ap_with_originium: false
+1280x720: true
+#test
+stages:
+    # test
+-   -   stage: 长泉镇郊野 #Test
+        sanity: 25
+        count: 5
+        //: 每周剿灭
+        remain: 0
+        #Test
+-   -   stage: CE-5
+        sanity: 30
+        count: 9999
+        //: 日常没钱（1/1）
+        remain: 9994
+    -   stage: AP-5
+        sanity: 30
+        count: 9999
+        //: 搞点红票
+        remain: 9995
+-   -   stage: CA-5
+        sanity: 30
+        count: 9999
+        //: 搞点技能书
+        remain: 9988
+-   -   stage: CE-5
+        sanity: 30
+        count: 9999
+        //: 日常没钱（1/1）
+        remain: 9996
