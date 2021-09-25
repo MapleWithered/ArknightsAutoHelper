@@ -125,6 +125,7 @@ config/device-config.json
 .vs
 .vscode
 user_file/plan.json
+user_file/plan.yaml
 config/akhelper-gui-datadir/
 
 penguin_stats/penguin_cache.json
