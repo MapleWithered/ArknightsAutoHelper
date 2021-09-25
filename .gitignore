@@ -124,8 +124,8 @@ config/config.yaml
 config/device-config.json
 .vs
 .vscode
-user_file/plan.json
-user_file/plan.yaml
+007/plan.json
+007/plan.yaml
 config/akhelper-gui-datadir/
 
 penguin_stats/penguin_cache.json

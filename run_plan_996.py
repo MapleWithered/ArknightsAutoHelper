@@ -2,6 +2,8 @@ import datetime
 import json
 import os
 import time
+
+import requests
 from ruamel import yaml
 
 import schedule
@@ -10,13 +12,18 @@ from Arknights.helper import logger
 from Arknights.shell_next import _create_helper
 from addons.activity import get_stage
 from Arknights.flags import *
+from penguin_stats import arkplanner
+
+# Config系列
+# 自动刷最少蓝材料（除去石头）
+# arkplanner系列（单优先级内根据材料生成计划）
+# GUI
 
 stages_not_open = []
 
-path_plan = 'user_file/plan.json'
-path_plan_yaml = 'user_file/plan.yaml'
-path_aog = 'user_file/aog.json'
-path_config = 'user_file/config.json'
+path_plan = '007/plan.yaml'
+path_aog = '007/cache/aog.yaml'
+path_config = '007/config.json'
 
 helper, _ = _create_helper()
 
@@ -34,15 +41,125 @@ def dump_plan_json(plan):
 
 
 def load_plan_yaml():
-    assert os.path.exists(path_plan_yaml), '未能检测到刷图计划文件.'
-    with open(path_plan_yaml, 'r', encoding='utf-8') as f:
+    assert os.path.exists(path_plan), '未能检测到刷图计划文件.'
+    with open(path_plan, 'r', encoding='utf-8') as f:
         plan = yaml.load(f.read(), Loader=yaml.RoundTripLoader)
-        return plan
+    return plan
 
 
 def dump_plan_yaml(plan):
-    with open(path_plan_yaml, 'w', encoding='utf-8') as f:
+    with open(path_plan, 'w', encoding='utf-8') as f:
         yaml.dump(plan, f, Dumper=yaml.RoundTripDumper, indent=4, allow_unicode=True, encoding='utf-8')
+
+
+def load_config():
+    assert os.path.exists(path_plan), '未能检测到配置文件.'
+    with open(path_config, 'r', encoding='utf-8') as f:
+        config = yaml.load(f.read(), Loader=yaml.RoundTripLoader)
+    return config
+
+
+def load_aog_data():
+    if not os.path.exists(path_aog):
+        logger.info('未检测到一图流关卡数据，正在拉取')
+        aog_data = requests.get('https://arkonegraph.herokuapp.com/total/CN').json()
+        with open(path_aog, 'w', encoding='utf-8') as f:
+            yaml.dump(aog_data, f, Dumper=yaml.RoundTripDumper, indent=4, allow_unicode=True, encoding='utf-8')
+        logger.info('拉取完成，存放在{path_aog}')
+    else:
+        with open(path_aog, 'r', encoding='utf-8') as f:
+            aog_data = yaml.load(f.read(), Loader=yaml.RoundTripLoader)
+    return aog_data
+
+
+def load_inventory():
+    return helper.get_inventory_items(True)
+
+
+def aog_order_stage(item_data):
+    list_stages = []
+    for stage in item_data['lowest_ap_stages']['normal']:
+        if [stage['code'], stage['efficiency']] not in list_stages:
+            list_stages.append([stage['code'], stage['efficiency']])
+    for stage in item_data['lowest_ap_stages']['event']:
+        if [stage['code'], stage['efficiency']] not in list_stages:
+            list_stages.append([stage['code'], stage['efficiency']])
+    for stage in item_data['balanced_stages']['normal']:
+        if [stage['code'], stage['efficiency']] not in list_stages:
+            list_stages.append([stage['code'], stage['efficiency']])
+    for stage in item_data['balanced_stages']['event']:
+        if [stage['code'], stage['efficiency']] not in list_stages:
+            list_stages.append([stage['code'], stage['efficiency']])
+    for stage in item_data['drop_rate_first_stages']['normal']:
+        if [stage['code'], stage['efficiency']] not in list_stages:
+            list_stages.append([stage['code'], stage['efficiency']])
+    for stage in item_data['drop_rate_first_stages']['event']:
+        if [stage['code'], stage['efficiency']] not in list_stages:
+            list_stages.append([stage['code'], stage['efficiency']])
+    list_stages.sort(reverse=True, key=(lambda x: x[1]))
+    return list_stages
+
+
+def get_my_item_count(item_name):
+    my_items = load_inventory()
+    logger.info("从在线数据库中获取游戏物品列表")
+    all_items = arkplanner.get_all_items()
+    for item in all_items:
+        if item['itemType'] in ['MATERIAL'] and item['name'] == item_name:
+            return my_items.get(item['itemId'], 0)
+
+
+def print_all_items_name():
+    all_items = arkplanner.get_all_items()
+    for item in all_items:
+        if item['itemType'] in ['MATERIAL']:
+            print(item['name'])
+
+
+def get_min_blue_item_stage(item_exclude_list=None, stage_exclude_list=None):
+    if item_exclude_list is None:
+        item_exclude_list = []
+    if stage_exclude_list is None:
+        stage_exclude_list = []
+    aog_data = load_aog_data()
+    my_items = load_inventory()
+    all_items = arkplanner.get_all_items()
+    list_my_blue_item = []
+    for item in all_items:
+        if item['itemType'] in ['MATERIAL'] and item['name'] not in item_exclude_list and item['rarity'] == 2 \
+                and len(item['itemId']) > 4:
+            list_my_blue_item.append({'name': item['name'],
+                                      'itemId': item['itemId'],
+                                      'count': my_items.get(item['itemId'], 0),
+                                      'rarity': item['rarity']})
+    list_my_blue_item = sorted(list_my_blue_item, key=lambda x: x['count'])
+    # print('require item: %s, owned: %s, need ' % (list_my_blue_item[0]['name'], list_my_blue_item[0]['count']))
+    second_count = list_my_blue_item[0]['count']
+    for i in range(len(list_my_blue_item)):
+        if list_my_blue_item[i]['count'] > list_my_blue_item[0]['count']:
+            second_count = list_my_blue_item[i]['count']
+            break
+    else:
+        second_count += 9999
+    # return [list_my_blue_item[0]['name'], list_my_blue_item[0]['count'], (second_count-list_my_blue_item[0]['count'])]
+    # 获得了要刷的最少蓝材料 以及蓝材料的个数
+
+    blue_items_data = aog_data['tier']['t3']
+    stage_todo = None
+    i = 0
+    while i < len(list_my_blue_item):  # 要刷的蓝材料从自己最少的蓝材料开始
+        item_seen = False
+        for aog_blue_item in blue_items_data:
+            if aog_blue_item['name'] == list_my_blue_item[i]['name']:  # 对于需要刷的这个蓝材料
+                item_seen = True
+                stage_info = aog_order_stage(aog_blue_item)
+                for stage in stage_info:  # 对于能刷的关卡表
+                    if stage[0] not in stage_exclude_list:  # 如果这个关卡能刷
+                        stage_todo = stage[0]
+                        print('item:', list_my_blue_item[i]['name'], 'stage:', stage_todo)
+                        return stage_todo
+        i += 1
+    return None
 
 
 def run_plan():
@@ -323,6 +440,8 @@ def clear_task_not_open():
 if __name__ == '__main__':
 
     assert os.path.exists(path_plan), '未能检测到刷图计划文件.'
+
+    print(get_min_blue_item_stage(['化合切削液', '半自然溶剂'], ['7-15']))
 
     run_print_plan()
     run_plan()
