@@ -1,3 +1,4 @@
+import copy
 import datetime
 import json
 import os
@@ -8,13 +9,16 @@ from ruamel import yaml
 
 import schedule
 
+import imgreco
 from Arknights.helper import logger
 from Arknights.shell_next import _create_helper
+import Arknights.stage_path
 from addons.activity import get_stage
 from Arknights.flags import *
+from imgreco import before_operation
 from penguin_stats import arkplanner
 
-# Config系列
+# 自动Sanity写进plan
 # 自动刷最少蓝材料（除去石头）
 # arkplanner系列（单优先级内根据材料生成计划）
 # GUI
@@ -23,7 +27,7 @@ stages_not_open = []
 
 path_plan = '007/plan.yaml'
 path_aog = '007/cache/aog.yaml'
-path_config = '007/config.json'
+path_config = '007/config/'
 
 helper, _ = _create_helper()
 
@@ -49,13 +53,17 @@ def load_plan_yaml():
 
 def dump_plan_yaml(plan):
     with open(path_plan, 'w', encoding='utf-8') as f:
-        yaml.dump(plan, f, Dumper=yaml.RoundTripDumper, indent=4, allow_unicode=True, encoding='utf-8')
+        yaml.dump(plan, f, Dumper=yaml.RoundTripDumper, indent=2, allow_unicode=True, encoding='utf-8')
 
 
 def load_config():
-    assert os.path.exists(path_plan), '未能检测到配置文件.'
-    with open(path_config, 'r', encoding='utf-8') as f:
-        config = yaml.load(f.read(), Loader=yaml.RoundTripLoader)
+    config = {}
+    with open(path_config + 'item_excluded.yaml', 'r', encoding='utf-8') as f:
+        config['item_excluded'] = yaml.load(f.read(), Loader=yaml.RoundTripLoader)
+    with open(path_config + 'stage_unavailable.yaml', 'r', encoding='utf-8') as f:
+        config['stage_unavailable'] = yaml.load(f.read(), Loader=yaml.RoundTripLoader)
+    with open(path_config + 'config.yaml', 'r', encoding='utf-8') as f:
+        config.update(yaml.load(f.read(), Loader=yaml.RoundTripLoader))
     return config
 
 
@@ -112,21 +120,22 @@ def get_my_item_count(item_name):
 def print_all_items_name():
     all_items = arkplanner.get_all_items()
     for item in all_items:
-        if item['itemType'] in ['MATERIAL']:
+        if item['itemType'] in ['MATERIAL']:  # and item['rarity'] == 2
             print(item['name'])
 
 
-def get_min_blue_item_stage(item_exclude_list=None, stage_exclude_list=None):
-    if item_exclude_list is None:
-        item_exclude_list = []
-    if stage_exclude_list is None:
-        stage_exclude_list = []
+def get_min_blue_item_stage(item_excluded=None, stage_unavailable=None):
+    config = load_config()
+    if item_excluded is None:
+        item_excluded = config['item_excluded']
+    if stage_unavailable is None:
+        stage_unavailable = config['stage_unavailable']
     aog_data = load_aog_data()
     my_items = load_inventory()
     all_items = arkplanner.get_all_items()
     list_my_blue_item = []
     for item in all_items:
-        if item['itemType'] in ['MATERIAL'] and item['name'] not in item_exclude_list and item['rarity'] == 2 \
+        if item['itemType'] in ['MATERIAL'] and item['name'] not in item_excluded and item['rarity'] == 2 \
                 and len(item['itemId']) > 4:
             list_my_blue_item.append({'name': item['name'],
                                       'itemId': item['itemId'],
@@ -154,17 +163,148 @@ def get_min_blue_item_stage(item_exclude_list=None, stage_exclude_list=None):
                 item_seen = True
                 stage_info = aog_order_stage(aog_blue_item)
                 for stage in stage_info:  # 对于能刷的关卡表
-                    if stage[0] not in stage_exclude_list:  # 如果这个关卡能刷
+                    if stage[0] not in stage_unavailable:  # 如果这个关卡能刷
                         stage_todo = stage[0]
-                        print('item:', list_my_blue_item[i]['name'], 'stage:', stage_todo)
+                        logger.info('蓝材料:' + list_my_blue_item[i]['name'] + ',  关卡:' + stage_todo)
                         return stage_todo
         i += 1
     return None
 
 
+def goto_stage_special_record(stage_name, config=None):
+    if config is None:
+        config = load_config()
+    helper.back_to_main()
+    # 得到关卡前缀
+    if stage_name.rfind('-') == -1:
+        stage_category = stage_name
+    else:
+        stage_category = stage_name[:stage_name.rfind('-')]
+    record_name = f"main_to_{stage_category}"
+    # 判断点击路径是否存在
+    if not os.path.exists(f'custom_record/{record_name}/record.json'):
+        # 不存在点击路径 进行录制
+        logger.warning(f"当前关卡{stage_category}，未录制点击路径。")
+        c = input(f'是否录制相应操作记录(需要 MuMu 模拟器)[y/N]:').strip().lower()
+        if c != 'y':
+            # 用户不希望录制 当日内忽略此关卡
+            stages_not_open.append(stage_name)
+            logger.info(f"今日将忽略 {stage_name} 关卡")
+            return -1
+        # 希望录制 判断支线关卡/剿灭作战
+        if stage_name.find('-') != -1:
+            # 支线活动关卡
+            wait_seconds_after_touch = 4
+            print('录制到进入活动关卡选择界面即可, 无需点击具体的某个关卡.')
+            print(f'如果需要重新录制, 删除 custom_record 下的 {record_name} 文件夹即可.')
+            print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+            print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+            print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+            print(f'准备开始录制 {record_name}...')
+            helper.create_custom_record(record_name, roi_size=64,
+                                        description=f"从主线一路点击进入{stage_category}关卡（章节）",
+                                        wait_seconds_after_touch=wait_seconds_after_touch)
+        else:
+            # 剿灭作战
+            wait_seconds_after_touch = 4
+            print('录制到出现开始行动按钮为止。')
+            print(f'如果需要重新录制, 删除 custom_record 下的 {record_name} 文件夹即可.')
+            print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+            print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+            print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
+            print(f'准备开始录制 {record_name}...')
+            helper.create_custom_record(record_name, roi_size=64,
+                                        description=f"从主线一路点击进入{stage_category}关卡",
+                                        wait_seconds_after_touch=wait_seconds_after_touch)
+        # 录完了 刷一波
+        if stage_name.find('-') != -1:
+            _, stage_map_linear = get_stage(stage_name)
+            try:
+                helper.find_and_tap_stage_by_ocr(partition=None, target=stage_name,
+                                                 partition_map=stage_map_linear)
+                helper.wait(TINY_WAIT, MANLIKE_FLAG=False)
+            except RuntimeError:
+                # 活动关识别失败
+                return -1
+    else:
+        # 存在点击路径 进行点击
+        clickmode = 'point' if config.get("1280x720", False) else 'match_template'
+        helper.replay_custom_record(record_name, mode=clickmode)
+        # 判断支线关卡/剿灭作战
+        if stage_name.find('-') != -1:
+            try:
+                _, stage_map_linear = get_stage(stage_name)
+            except RuntimeError:
+                return -1
+            try:
+                helper.find_and_tap_stage_by_ocr(partition=None, target=stage_name,
+                                                 partition_map=stage_map_linear)
+                helper.wait(TINY_WAIT, MANLIKE_FLAG=False)
+            except RuntimeError:
+                # 活动关名字识别失败
+                return -1
+    return 0
+
+
+def goto_stage(stage):
+    failure_count = 0
+    while failure_count <= 7:
+        if Arknights.stage_path.is_stage_supported_ocr(stage):
+            helper.goto_stage_by_ocr(stage)
+            helper.wait(TINY_WAIT, MANLIKE_FLAG=False)
+            if '-' in str(stage):
+                if ensure_stage(stage) == 0:
+                    return 0
+            else:
+                return 0
+        else:
+            goto_stage_special_record(stage)
+            if '-' in str(stage):
+                if ensure_stage(stage) == 0:
+                    return 0
+            else:
+                return 0
+        failure_count += 1
+    else:
+        return -1
+
+
+def ensure_stage(stage):
+    helper.wait(1, MANLIKE_FLAG=False)
+    count_times = 0
+    while True:
+        screenshot = helper.adb.screenshot()
+        recoresult = imgreco.before_operation.recognize(screenshot)
+        if recoresult is not None:
+            logger.debug('当前画面关卡：%s', recoresult['operation'])
+            if stage is not None:
+                # 如果传入了关卡 ID，检查识别结果
+                if recoresult['operation'] != stage:
+                    print(recoresult['operation'])
+                    logger.error('不在关卡界面')
+                    return -1
+                else:
+                    return 0
+            break
+        else:
+            count_times += 1
+            helper.wait(1, False)
+            if count_times >= 7:
+                logger.warning('不在关卡界面')
+                helper.wait(TINY_WAIT, False)
+                continue
+            else:
+                logger.error('{}次检测后都不再关卡界面'.format(count_times))
+                return -1
+    return 0
+
+
 def run_plan():
+    global stages_not_open
+    config = load_config()
+
     plan = load_plan_yaml()
-    assert plan['stages'], "刷图计划文件中未能检测到刷图计划，或格式错误"
+    assert plan['plan'], "刷图计划文件中未能检测到刷图计划，或格式错误"
 
     logger.warning('开始刷图')
 
@@ -172,131 +312,63 @@ def run_plan():
 
     while has_remain_sanity:
         priority_id = 0
-        for priority in plan['stages']:
+        for priority in plan['plan']:
             priority_id += 1
-            stages_same_prior = priority
-            # 找出符合要求的关卡：余比最高的开放关卡
-            stage_ok_id = -1
-            max_remain_ratio = 0
-            for i in range(len(stages_same_prior)):
-                stage = stages_same_prior[i]
-                remain_ratio = stage.get('remain', stage['count']) / stage['count']
-                if stage['stage'] not in stages_not_open and stage.get('remain', stage[
-                    'count']) > 0 and remain_ratio > max_remain_ratio:
-                    stage_ok_id = i
-                    max_remain_ratio = remain_ratio
-            if stage_ok_id == -1:
-                logger.warning('优先级 ' + str(priority_id) + ' 无剩余未完成开放关卡')
-                continue  # 没有未完成的开放关卡，下一优先级
-            stage = stages_same_prior[stage_ok_id]
-            remain = stage.get('remain', stage['count'])
-            logger.warning('优先级: %s, 关卡 [%s], 总计划: %s, 剩余次数: %s, 备注: %s' % (
-                priority_id, stage['stage'], stage['count'], remain, stage['//']))
-            try:
-                # 执行未完成的开放关卡一次
-                c_id, remain = helper.module_battle(stage['stage'], 1)
-            except RuntimeError:
-                # 未开放，加入未开放关卡列表中
-                logger.info('关卡 [%s] 未开放, 继续下一关卡' % stage['stage'])
-                stages_not_open.append(stage['stage'])
-                logger.info('当日未开放关卡列表：' + str(stages_not_open))
-                break  # 重新进行优先级遍历
-            except ValueError:
-                # 非主线芯片关卡（即，故事集/活动/剿灭）
-                helper.back_to_main()
-                # 得到关卡前缀
-                if stage['stage'].rfind('-') == -1:
-                    stage_category = stage['stage']
-                else:
-                    stage_category = stage['stage'][:stage['stage'].rfind('-')]
-                record_name = f"main_to_{stage_category}"
-                # 判断点击路径是否存在
-                if not os.path.exists(f'custom_record/{record_name}/record.json'):
-                    # 不存在点击路径 进行录制
-                    logger.warning(f"当前关卡{stage_category}，未录制点击路径。")
-                    c = input(f'是否录制相应操作记录(需要 MuMu 模拟器)[y/N]:').strip().lower()
-                    if c != 'y':
-                        # 用户不希望录制 当日内忽略此关卡
-                        stages_not_open.append(stage['stage'])
-                        logger.info(f"今日将忽略 {stage['stage']} 关卡")
+            if list(priority)[0] == 'stages':
+                stages_same_prior = priority['stages']
+                # 找出符合要求的关卡：余比最高的开放关卡
+                stage_ok_id = -1
+                max_remain_ratio = 0
+                for i in range(len(stages_same_prior)):
+                    stage_data = stages_same_prior[i]
+                    stage_name = list(stage_data)[0]
+                    stage_count = stage_data[list(stage_data)[0]]
+                    if 'remain' not in list(stage_data):
+                        stage_data['remain'] = copy.deepcopy(stage_count)
+                    remain_ratio = stage_data['remain'] / stage_count
+                    if stage_name not in stages_not_open + config['stage_unavailable'] and stage_data['remain'] > 0 \
+                            and remain_ratio > max_remain_ratio:
+                        stage_ok_id = i
+                        max_remain_ratio = remain_ratio
+                if stage_ok_id == -1:
+                    logger.warning('优先级 ' + str(priority_id) + ' 无剩余未完成开放关卡')
+                    continue  # 没有未完成的开放关卡，下一优先级
+                stage_data = stages_same_prior[stage_ok_id]
+                stage_name = list(stage_data)[0]
+                stage_count = stage_data[list(stage_data)[0]]
+                stage_remain = stage_data['remain']
+                logger.warning('优先级: %s, 关卡 [%s], 总计划: %s, 剩余次数: %s, 备注: %s' % (
+                    priority_id, stage_name, stage_count, stage_remain, stage_data['//']))
+                try:
+                    # 执行未完成的开放关卡一次
+                    goto_stage(stage_name)
+                    _, remain = helper.module_battle_slim(set_count=1)
+                    if remain == 1:  # 理智不足未进行单次任务执行
+                        has_remain_sanity = False
+                        # 退出遍历
+                        break
+                    else:  # 成功执行一次任务
+                        stage_data['remain'] -= 1
+                        dump_plan_yaml(plan)
                         break  # 重新进行优先级遍历
-                    # 希望录制 判断支线关卡/剿灭作战
-                    if stage['stage'].find('-') != -1:
-                        # 支线活动关卡
-                        wait_seconds_after_touch = 4
-                        print('录制到进入活动关卡选择界面即可, 无需点击具体的某个关卡.')
-                        print(f'如果需要重新录制, 删除 custom_record 下的 {record_name} 文件夹即可.')
-                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
-                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
-                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
-                        print(f'准备开始录制 {record_name}...')
-                        helper.create_custom_record(record_name, roi_size=64,
-                                                    description=f"从主线一路点击进入{stage_category}关卡（章节）",
-                                                    wait_seconds_after_touch=wait_seconds_after_touch)
-                    else:
-                        # 剿灭作战
-                        wait_seconds_after_touch = 4
-                        print('录制到出现开始行动按钮为止。')
-                        print(f'如果需要重新录制, 删除 custom_record 下的 {record_name} 文件夹即可.')
-                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
-                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
-                        print(f'请在点击后等待 {wait_seconds_after_touch} s , 待控制台出现 "继续..." 字样, 再进行下一次点击.')
-                        print(f'准备开始录制 {record_name}...')
-                        helper.create_custom_record(record_name, roi_size=64,
-                                                    description=f"从主线一路点击进入{stage_category}关卡",
-                                                    wait_seconds_after_touch=wait_seconds_after_touch)
-                    # 录完了 刷一波
-                    if stage['stage'].find('-') != -1:
-                        _, stage_map_linear = get_stage(stage['stage'])
-                        while True:
-                            try:
-                                helper.find_and_tap_stage_by_ocr(partition=None, target=stage['stage'],
-                                                                 partition_map=stage_map_linear)
-                                helper.wait(TINY_WAIT, MANLIKE_FLAG=False)
-                            except RuntimeError:
-                                # 活动关识别失败，程序重新尝试识别
-                                logger.info('关卡 [%s] 识别失败, 尝试重新识别' % stage['stage'])
-                            else:
-                                break
-                        c_id, remain = helper.module_battle_slim(stage['stage'], 1)
-                    else:
-                        c_id, remain = helper.module_battle_slim(None, 1)
-                else:
-                    # 存在点击路径 进行点击
-                    clickmode = 'point' if plan.get("1280x720", False) else 'match_template'
-                    helper.replay_custom_record(record_name, mode=clickmode)
-                    # 判断支线关卡/剿灭作战
-                    if stage['stage'].find('-') != -1:
-                        try:
-                            _, stage_map_linear = get_stage(stage['stage'])
-                        except RuntimeError:
-                            # 未开放，加入未开放关卡列表中
-                            logger.info('关卡 [%s] 未开放, 继续下一关卡' % stage['stage'])
-                            stages_not_open.append(stage['stage'])
-                            logger.info('当日未开放关卡列表：' + str(stages_not_open))
-                            break  # 重新进行优先级遍历
-                        while True:
-                            try:
-                                helper.find_and_tap_stage_by_ocr(partition=None, target=stage['stage'],
-                                                                 partition_map=stage_map_linear)
-                                helper.wait(TINY_WAIT, MANLIKE_FLAG=False)
-                            except RuntimeError:
-                                # 活动关识别失败，程序重新尝试识别
-                                logger.info('关卡 [%s] 识别失败, 尝试重新识别' % stage['stage'])
-                            else:
-                                break
-                        c_id, remain = helper.module_battle_slim(stage['stage'], 1)
-                    else:
-                        c_id, remain = helper.module_battle_slim(None, 1)
 
-            if remain == 1:  # 理智不足未进行单次任务执行
-                has_remain_sanity = False
-                # 退出遍历
+                except RuntimeError:
+                    # 未开放，加入未开放关卡列表中
+                    logger.info('关卡 [%s] 未开放, 继续下一关卡' % stage_name)
+                    stages_not_open.append(stage_name)
+                    logger.info('当日未开放关卡列表：' + str(stages_not_open))
+                    break  # 重新进行优先级遍历
+            elif list(priority)[0] == 'blue_item':
+                logger.warning("优先级: " + str(priority_id) + ", 刷仓库中最少的蓝材料")
+                min_blue_stage = get_min_blue_item_stage()
+                goto_stage(min_blue_stage)
+                _, remain = helper.module_battle_slim(min_blue_stage, 1)
+                if remain == 1:  # 理智不足未进行单次任务执行
+                    has_remain_sanity = False
+                    # 退出遍历
                 break
-            else:  # 成功执行一次任务
-                stage['remain'] = stage.get('remain', stage['count']) - 1
-                dump_plan_yaml(plan)
-                break  # 重新进行优先级遍历
+            elif list(priority)[0] == 'planner':
+                ...
 
     helper.back_to_main()
     logger.info('理智已清空')
@@ -329,8 +401,8 @@ def run_task():
 def print_plan():
     plan = load_plan_yaml()
 
-    print_plan_with_plan(plan)
-    print_sanity_usage(plan)
+    # print_plan_with_plan(plan)
+    # print_sanity_usage(plan)
 
 
 def get_good_stage_id(stages_same_prior):
@@ -349,11 +421,11 @@ def get_good_stage_id(stages_same_prior):
 def print_plan_with_plan(plan):
     logger.warning("当前刷图计划：")
     logger.info("---------------------------------------------------------------------------------------")
-    logger.info("优先  " + "关卡".ljust(12) + "理智".ljust(5) + "计划".ljust(5) + "剩余".ljust(5) + "余比".ljust(8) + "备注")
+    logger.info("优先  " + "任务".ljust(12) + "理智".ljust(5) + "计划".ljust(5) + "剩余".ljust(5) + "余比".ljust(8) + "备注")
     logger.info("---------------------------------------------------------------------------------------")
     prior = 1
     ok_task_used = False
-    for tasks_same_prior in plan['stages']:
+    for tasks_same_prior in plan['plan']:
         stages_same_prior = tasks_same_prior
         ok_id = get_good_stage_id(stages_same_prior)
         for task_id, task in enumerate(stages_same_prior):
@@ -386,7 +458,7 @@ def print_sanity_usage(plan):
     prior = 1
     now_prior = -1
     ok_task_used = False
-    for tasks_same_prior in plan['stages']:
+    for tasks_same_prior in plan['plan']:
         stages_same_prior = tasks_same_prior
         ok_id = get_good_stage_id(stages_same_prior)
         for task_id, task in enumerate(stages_same_prior):
@@ -410,7 +482,7 @@ def print_sanity_usage(plan):
             break
     if now_prior != -1:
         sanity_usage = 0
-        for task in plan['stages'][now_prior - 1]:
+        for task in plan['plan'][now_prior - 1]:
             sanity_usage += task.get('remain', task['count']) * task.get('sanity', 0)
         hour_rest = sanity_usage / 240 * 24
         hour_rest_monthly = sanity_usage // 300 * 24 + sanity_usage % 300 / 10
@@ -440,8 +512,6 @@ def clear_task_not_open():
 if __name__ == '__main__':
 
     assert os.path.exists(path_plan), '未能检测到刷图计划文件.'
-
-    print(get_min_blue_item_stage(['化合切削液', '半自然溶剂'], ['7-15']))
 
     run_print_plan()
     run_plan()
