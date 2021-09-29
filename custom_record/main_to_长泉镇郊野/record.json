@@ -6,8 +6,8 @@
         {
             "img": "step0.png",
             "point": [
-                937,
-                163
+                933,
+                162
             ],
             "raise_exception": true,
             "repeat": 1,
@@ -18,8 +18,8 @@
         {
             "img": "step1.png",
             "point": [
-                1003,
-                675
+                1001,
+                671
             ],
             "raise_exception": true,
             "repeat": 1,
@@ -30,8 +30,32 @@
         {
             "img": "step2.png",
             "point": [
-                635,
-                391
+                311,
+                528
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step3.png",
+            "point": [
+                642,
+                356
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step4.png",
+            "point": [
+                688,
+                375
             ],
             "raise_exception": true,
             "repeat": 1,

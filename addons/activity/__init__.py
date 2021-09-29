@@ -10,7 +10,10 @@ activities_cache_file = os.path.join(os.path.realpath(os.path.dirname(__file__))
 
 
 def get_stage_map(force_update=False):
-    stages = load_game_data('stage_table', force_update)['stages']
+    try:
+        stages = load_game_data('stage_table', force_update)['stages']
+    except Exception:
+        stages = load_game_data('stage_table', True)['stages']
     return process_stages(stages)
 
 
@@ -29,11 +32,19 @@ def process_stages(stages):
 
 
 def get_activities(force_update=False):
-    return load_game_data('activity_table', force_update)['basicInfo']
+    try:
+        activities = load_game_data('activity_table', force_update)['basicInfo']
+    except Exception:
+        activities = load_game_data('activity_table', True)['basicInfo']
+    return activities
 
 
 def get_zones(force_update=False):
-    return load_game_data('zone_table', force_update=force_update)['zones']
+    try:
+        zones = load_game_data('zone_table', force_update=force_update)['zones']
+    except Exception:
+        zones = load_game_data('zone_table', force_update=True)['zones']
+    return zones
 
 
 def get_stage(target_stage_code):

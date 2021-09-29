@@ -71,7 +71,9 @@ def get_main_stage_map():
 
 
 def get_plan(required, owned, extra_outc=False, exp_demand=False, gold_demand=True,
-             input_lang='id', output_lang='id', server='CN'):
+             input_lang='id', output_lang='id', server='CN', exclude=None):
+    if exclude is None:
+        exclude = []
     url = 'https://planner.penguin-stats.io/plan'
     post_data = {
         'required': required,
@@ -81,9 +83,10 @@ def get_plan(required, owned, extra_outc=False, exp_demand=False, gold_demand=Tr
         'gold_demand': gold_demand,  # 大量需求龙门币
         'input_lang': input_lang,
         'output_lang': output_lang,
-        'server': server
+        'server': server,
+        'exclude': exclude
     }
-    print(post_data)
+    # print(post_data)
     resp = requests.post(url, json=post_data)
     return resp.json()
 
