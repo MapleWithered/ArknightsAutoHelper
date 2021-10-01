@@ -290,7 +290,14 @@ def goto_stage(stage):
     failure_count = 0
     while failure_count <= 7:
         if Arknights.stage_path.is_stage_supported_ocr(stage):
-            helper.goto_stage_by_ocr(stage)
+            try:
+                helper.goto_stage_by_ocr(stage)
+            except RuntimeError as err:
+                if str(err) == "recognition failed":
+                    failure_count += 1
+                    continue
+                else:
+                    raise
             helper.wait(TINY_WAIT, MANLIKE_FLAG=False)
             if '-' in str(stage):
                 if ensure_stage(stage) == 0:
@@ -306,7 +313,7 @@ def goto_stage(stage):
             return 0
         failure_count += 1
     else:
-        return -1
+        raise RuntimeError("Unable to goto stage.")
 
 
 def ensure_stage(stage):
@@ -419,7 +426,7 @@ def run_plan():
                 item_list = []
                 for item in priority[list(priority)[0]]:
                     item_num_had = get_my_item_count(list(item)[0], my_inventory)
-                    item_num_need = item[list(item)[0]] - item_num_had if item[list(item)[0]] - item_num_had >= 0 else 0
+                    item_num_need = item[list(item)[0]]
                     item_name = list(item)[0]
                     if item_num_need > 0:
                         item_list.append([item_name, item_num_need])
@@ -508,6 +515,8 @@ def create_plan_by_item(item_list, my_inventory=None):
     # calc_mode = config.get('plan/calc_mode', 'online')
     plan = mp.get_plan(required, owned, print_output=False, outcome=True, convertion_dr=0.17,
                        input_lang='zh', output_lang='zh', exclude=excluded)
+
+
     # print('正在获取刷图计划...')
     # if calc_mode == 'online':
     #     plan = arkplanner.get_plan(required, owned)
@@ -595,7 +604,7 @@ def print_plan_with_plan(plan, my_inventory, print_priority=None):
             item_list = []
             for item in priority[list(priority)[0]]:
                 item_num_had = get_my_item_count(list(item)[0], my_inventory)
-                item_num_need = item[list(item)[0]] - item_num_had if item[list(item)[0]] - item_num_had >= 0 else 0
+                item_num_need = item[list(item)[0]]
                 item_name = list(item)[0]
                 if item_num_need > 0:
                     item_list.append([item_name, item_num_need])
@@ -609,7 +618,7 @@ def print_plan_with_plan(plan, my_inventory, print_priority=None):
                     logger.info(
                         priority_str + item_name.ljust(14 - int((len(item_name.encode('utf-8')) - len(item_name)) / 2)) +
                         str(item_num_had).ljust(7) + str(item[list(item)[0]]).ljust(7) +
-                        str(item_num_need).ljust(8))
+                        str(max(item_num_need-item_num_had, 0)).ljust(8))
             arkplanner_result = create_plan_by_item(item_list, my_inventory)
             if len(arkplanner_result[0]) > 0:
                 # logger.info("      ↓             ↓      ↓      ↓             -  -  -  -     arkplanner     -  -  -  -")

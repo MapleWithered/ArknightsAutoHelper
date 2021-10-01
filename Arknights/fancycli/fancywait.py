@@ -43,7 +43,8 @@ class StatusLineFancy(StatusLineBase):
     def update(self, text):
         with self.op.keep_cursor():
             self.op.move_to_scroll_area()
-            self.io.write(("\033[0m\033[46m\033[30m\033[K%s\033[K\033[0m" % text).encode('utf-8'))
+            # self.io.write(("\033[0m\033[46m\033[30m\033[K%s\033[K\033[0m" % text).encode('utf-8'))
+            self.io.write(("%s\033[K" % text).encode('utf-8'))
 
     def cleanup(self):
         self.update('[RUNNING]')
