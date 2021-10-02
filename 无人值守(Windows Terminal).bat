@@ -20,6 +20,7 @@ python run_plan_996.py
 rem 结束进程
 :end
 echo [93m[!] 拜拜嘞您[1m
-TIMEOUT>nul 2>nul /T 3
+rem TIMEOUT>nul 2>nul /T 3
+pause
 @exit
 

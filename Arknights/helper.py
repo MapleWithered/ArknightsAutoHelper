@@ -1101,3 +1101,9 @@ class ArknightsHelper(object):
                     self.adb.touch_tap((x, y), offsets=(5, 5))
                     if record.get('wait_seconds_after_touch'):
                         self.__wait(record['wait_seconds_after_touch'])
+            if record['type'] == 'swipe':
+                x1, y1 = record['point']
+                dx, dy = record['delta']
+                repeat = record.get('repeat', 1)
+                for _ in range(repeat):
+                    self.adb.touch_swipe2((x1, y1), (dx, dy))

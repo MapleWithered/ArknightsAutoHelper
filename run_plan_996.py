@@ -287,6 +287,8 @@ def goto_stage_special_record(stage_name, config=None):
 
 
 def goto_stage(stage):
+    if stage == 'MN-8':
+        stage = 'MN8'
     failure_count = 0
     while failure_count <= 7:
         if Arknights.stage_path.is_stage_supported_ocr(stage):
@@ -516,7 +518,6 @@ def create_plan_by_item(item_list, my_inventory=None):
     plan = mp.get_plan(required, owned, print_output=False, outcome=True, convertion_dr=0.17,
                        input_lang='zh', output_lang='zh', exclude=excluded)
 
-
     # print('正在获取刷图计划...')
     # if calc_mode == 'online':
     #     plan = arkplanner.get_plan(required, owned)
@@ -553,7 +554,8 @@ def print_plan_with_plan(plan, my_inventory, print_priority=None):
         priority_first_line = True
         if list(priority)[0] == 'stages':
             if print_priority == prior or print_priority is None:
-                logger.info("优先  " + "关卡".ljust(12) + "理智".ljust(5) + "计划".ljust(5) + "剩余".ljust(5) + "余比".ljust(8) + "备注")
+                logger.info(
+                    "优先  " + "关卡".ljust(12) + "理智".ljust(5) + "计划".ljust(5) + "剩余".ljust(5) + "余比".ljust(8) + "备注")
             stages_same_prior = priority['stages']
             ok_id = get_good_stage_id(stages_same_prior)
             for task_id, task in enumerate(stages_same_prior):
@@ -616,14 +618,16 @@ def print_plan_with_plan(plan, my_inventory, print_priority=None):
                     priority_str = '      '
                 if print_priority == prior or print_priority is None:
                     logger.info(
-                        priority_str + item_name.ljust(14 - int((len(item_name.encode('utf-8')) - len(item_name)) / 2)) +
+                        priority_str + item_name.ljust(
+                            14 - int((len(item_name.encode('utf-8')) - len(item_name)) / 2)) +
                         str(item_num_had).ljust(7) + str(item[list(item)[0]]).ljust(7) +
-                        str(max(item_num_need-item_num_had, 0)).ljust(8))
+                        str(max(item_num_need - item_num_had, 0)).ljust(8))
             arkplanner_result = create_plan_by_item(item_list, my_inventory)
             if len(arkplanner_result[0]) > 0:
                 # logger.info("      ↓             ↓      ↓      ↓             -  -  -  -     arkplanner     -  -  -  -")
                 if print_priority == prior or print_priority is None:
-                    logger.info("                                                   -  -  ↓     arkplanner     ↓  -  -   ")
+                    logger.info(
+                        "                                                   -  -  ↓     arkplanner     ↓  -  -   ")
                     logger.info("      " + "关卡".ljust(12) + "理智".ljust(5) + "计划".ljust(5))
                 for stage in arkplanner_result[0]:
                     if ok_task_used is False:
@@ -649,7 +653,7 @@ def print_plan_with_plan(plan, my_inventory, print_priority=None):
         for stage in ok_priority_data:
             ok_cost += stage['sanity'] * stage['remain']
 
-    if ok_cost is not None and (ok_task_used+1 == print_priority or print_priority is None):
+    if ok_cost is not None and (ok_task_used + 1 == print_priority or print_priority is None):
         print_sanity_usage(ok_cost)
 
 
@@ -686,7 +690,6 @@ def run_update_data():
 if __name__ == '__main__':
 
     assert os.path.exists(path_plan), '未能检测到刷图计划文件.'
-
 
     init_inventory = load_inventory()
 
