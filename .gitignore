@@ -138,3 +138,4 @@ resources.zip
 
 vendor/ArkPlanner/data/*.json
 .DS_Store
+data/matrix.json
