@@ -362,14 +362,7 @@ def run_plan():
     plan = load_plan_yaml()
     assert plan['plan'], "刷图计划文件中未能检测到刷图计划，或格式错误"
 
-    if 'refill_with_item' in list(plan):
-        helper.refill_with_item = plan['refill_with_item']
-        helper.use_refill = helper.refill_with_item
-    else:
-        helper.refill_with_item = False
-        helper.use_refill = False
-    helper.refill_with_originium = False
-
+    update_refill_config(plan)
 
     logger.warning('开始刷图')
 
@@ -457,6 +450,16 @@ def run_plan():
                     continue  # 没有未完成的开放关卡，下一优先级
     helper.back_to_main()
     logger.info('理智已清空')
+
+
+def update_refill_config(plan):
+    if 'refill_with_item' in list(plan):
+        helper.refill_with_item = plan['refill_with_item']
+        helper.use_refill = helper.refill_with_item
+    else:
+        helper.refill_with_item = False
+        helper.use_refill = False
+    helper.refill_with_originium = False
 
 
 def run_friend():
