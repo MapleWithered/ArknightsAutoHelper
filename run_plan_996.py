@@ -362,6 +362,15 @@ def run_plan():
     plan = load_plan_yaml()
     assert plan['plan'], "刷图计划文件中未能检测到刷图计划，或格式错误"
 
+    if 'refill_with_item' in list(plan):
+        helper.refill_with_item = plan['refill_with_item']
+        helper.use_refill = helper.refill_with_item
+    else:
+        helper.refill_with_item = False
+        helper.use_refill = False
+    helper.refill_with_originium = False
+
+
     logger.warning('开始刷图')
 
     has_remain_sanity = True
