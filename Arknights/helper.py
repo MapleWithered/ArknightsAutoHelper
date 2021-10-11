@@ -922,7 +922,7 @@ class ArknightsHelper(object):
         self.__swipe_screen(move)
         screenshot = self.adb.screenshot()
         while True:
-            time.sleep(1)
+            self.wait_for_still_image()
             move = -randint(self.viewport[0] // 4, self.viewport[0] // 3)
             self.__swipe_screen(move)
             screen_items = imgreco.inventory.get_all_item_details_in_screen(screenshot)
