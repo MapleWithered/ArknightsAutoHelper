@@ -919,12 +919,12 @@ class ArknightsHelper(object):
         items = []
         last_screen_items = None
         move = -randint(self.viewport[0] // 4, self.viewport[0] // 3.8)
-        self.__swipe_screen(move)
+        self.__swipe_screen(move, origin_x=int(self.viewport[0]*0.8), origin_y=int(self.viewport[1]*0.3))
         screenshot = self.adb.screenshot()
         while True:
             time.sleep(1)
             move = -randint(self.viewport[0] // 4, self.viewport[0] // 3)
-            self.__swipe_screen(move)
+            self.__swipe_screen(move, origin_x=int(self.viewport[0] * 0.8), origin_y=int(self.viewport[1] * 0.3))
             screen_items = imgreco.inventory.get_all_item_details_in_screen(screenshot)
             screen_item_ids = set([item['itemId'] for item in screen_items])
             screen_items_map = {item['itemId']: item['quantity'] for item in screen_items}
@@ -946,10 +946,12 @@ class ArknightsHelper(object):
             # logger.info('items_map: %s' % {item['itemName']: item['quantity'] for item in items})
         return {item['itemId']: item['quantity'] for item in items}
 
-    def __swipe_screen(self, move, rand=100, origin_x=None, origin_y=None):
+    def __swipe_screen(self, move, rand=100, origin_x=None, origin_y=None, duration=None):
         origin_x = (origin_x or self.viewport[0] // 2) + randint(-rand, rand)
         origin_y = (origin_y or self.viewport[1] // 2) + randint(-rand, rand)
-        self.adb.touch_swipe2((origin_x, origin_y), (move, max(250, move // 2)), randint(600, 900))
+        if duration is None:
+            duration = randint(600, 900)
+        self.adb.touch_swipe2((origin_x, origin_y), (move, max(250, move // 2)), duration)
 
     def create_custom_record(self, record_name, roi_size=64, wait_seconds_after_touch=1,
                              description='', back_to_main=True, prefer_mode='match_template', threshold=0.7):
