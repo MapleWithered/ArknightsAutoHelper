@@ -290,7 +290,7 @@ def goto_stage(stage):
     if stage == 'MN-8':
         stage = 'MN8'
     failure_count = 0
-    while failure_count <= 7:
+    while failure_count <= 3:
         if Arknights.stage_path.is_stage_supported_ocr(stage):
             try:
                 helper.goto_stage_by_ocr(stage)
