@@ -916,19 +916,65 @@ class ArknightsHelper(object):
         logger.info("进入仓库")
         self.tap_rect(imgreco.inventory.get_inventory_rect(self.viewport))
 
+        last_direction = 1
+
+        time.sleep(3)
+
         items = []
-        last_screen_items = None
-        move = -randint(self.viewport[0] // 4, self.viewport[0] // 3.8)
-        self.__swipe_screen(move, origin_x=int(self.viewport[0]*0.8), origin_y=int(self.viewport[1]*0.3))
+        screen_items = set([])
+        last_screen_items = set([])
+
         screenshot = self.adb.screenshot()
-        while True:
-            time.sleep(1)
-            move = -randint(self.viewport[0] // 4, self.viewport[0] // 3)
-            self.__swipe_screen(move, origin_x=int(self.viewport[0] * 0.8), origin_y=int(self.viewport[1] * 0.3))
+
+        screen_items = imgreco.inventory.get_all_item_details_in_screen(screenshot)
+        screen_item_ids = set([item['itemId'] for item in screen_items])
+        screen_items_map = {item['itemId']: item['quantity'] for item in screen_items}
+
+        last_screen_items = screen_item_ids
+        items += screen_items
+
+        while len(screen_items) == 0:
+            move = -randint(self.viewport[0] // 4, self.viewport[0] // 3.8)
+            self.adb.touch_swipe2([int(self.viewport[0] * 0.8), int(self.viewport[1] * 0.3)], [-200, 10], 3000)
+
+            screenshot = self.adb.screenshot()
+
             screen_items = imgreco.inventory.get_all_item_details_in_screen(screenshot)
             screen_item_ids = set([item['itemId'] for item in screen_items])
             screen_items_map = {item['itemId']: item['quantity'] for item in screen_items}
-            if last_screen_items == screen_item_ids:
+
+            last_screen_items = screen_item_ids
+            items += screen_items
+
+        move = -randint(self.viewport[0] // 4, self.viewport[0] // 3)
+        self.__swipe_screen(move, origin_x=int(self.viewport[0] * 0.8), origin_y=int(self.viewport[1] * 0.3),
+                            duration=1000)
+        self.adb.touch_tap([self.viewport[0] // 2, int(self.viewport[1] * 0.93)])
+
+        while True:
+            screenshot = self.adb.screenshot()
+
+            screen_items = imgreco.inventory.get_all_item_details_in_screen(screenshot)
+            screen_item_ids = set([item['itemId'] for item in screen_items])
+            screen_items_map = {item['itemId']: item['quantity'] for item in screen_items}
+            union_item_ids = screen_item_ids.intersection(last_screen_items)
+            if len(union_item_ids)==0 and last_direction==1:
+                self.__swipe_screen(self.viewport[0], origin_x=0, origin_y=int(self.viewport[1] * 0.3),
+                                    duration=1000)
+                self.adb.touch_tap([self.viewport[0] // 2, int(self.viewport[1] * 0.93)])
+
+                screenshot = self.adb.screenshot()
+
+                screen_items = imgreco.inventory.get_all_item_details_in_screen(screenshot)
+                screen_item_ids = set([item['itemId'] for item in screen_items])
+                screen_items_map = {item['itemId']: item['quantity'] for item in screen_items}
+
+                last_screen_items = screen_item_ids
+                items += screen_items
+
+                last_direction = -1
+                continue
+            if last_screen_items == screen_item_ids and last_direction == 1:
                 logger.info("读取完毕")
                 break
             if show_item_name:
@@ -939,8 +985,13 @@ class ArknightsHelper(object):
                 # logger.info('screen_items_map: %s' % screen_items_map)
             last_screen_items = screen_item_ids
             items += screen_items
+
+            move = -randint(self.viewport[0] // 4, self.viewport[0] // 3)
+            self.__swipe_screen(move, origin_x=int(self.viewport[0] * 0.8), origin_y=int(self.viewport[1] * 0.3), duration=1000)
+            last_direction = 1
+            self.adb.touch_tap([self.viewport[0] // 2, int(self.viewport[1] * 0.93)])
+
             # break
-            screenshot = self.adb.screenshot()
         if show_item_name:
             ...
             # logger.info('items_map: %s' % {item['itemName']: item['quantity'] for item in items})
