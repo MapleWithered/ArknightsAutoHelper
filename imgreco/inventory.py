@@ -137,7 +137,7 @@ def show_img(cv_img):
 
 def get_quantity(num_img):
     logger.logimage(num_img)
-    x_threshold = 5     # 1280x720
+    x_threshold = 7     # 1920x1080
     numimg = imgops.crop_blackedge2(num_img, 130, x_threshold)
     logger.logimage(numimg)
 

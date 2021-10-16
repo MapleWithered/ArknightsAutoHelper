@@ -270,7 +270,7 @@ def goto_stage_special_record(stage_name, config=None):
                 return -1
     else:
         # 存在点击路径 进行点击
-        clickmode = 'point' if config.get("1280x720", False) else 'match_template'
+        clickmode = 'point' if config.get("1920x1080", False) else 'match_template'
         helper.replay_custom_record(record_name, mode=clickmode)
         # 判断支线关卡/剿灭作战
         if stage_name.find('-') != -1:
