@@ -205,7 +205,9 @@ def get_min_blue_item_stage(item_excluded=None, stage_unavailable=None, my_items
                 for stage in stage_info:  # 对于能刷的关卡表
                     if stage[0] not in stage_unavailable:  # 如果这个关卡能刷
                         stage_todo = stage[0]
-                        logger.info('蓝材料:' + list_my_blue_item[i]['name'] + ',  关卡:' + stage_todo)
+                        logger.info('蓝材料: ' + list_my_blue_item[i]['name'] +
+                                    ', 当前数量: ' + str(list_my_blue_item[i]['count']) +
+                                    ', 关卡: ' + stage_todo)
                         return stage_todo
         i += 1
     return None
@@ -665,8 +667,11 @@ def print_plan_with_plan(plan, my_inventory, print_priority=None):
         for stage in ok_priority_data:
             ok_cost += stage['sanity'] * stage['remain']
 
-    if ok_cost is not None and (ok_task_used + 1 == print_priority or print_priority is None):
-        print_sanity_usage(ok_cost)
+    if ok_task_used + 1 == print_priority or print_priority is None:        # 要打印信息
+        if ok_cost is not None:                                             # 有理智消耗信息的情况
+            print_sanity_usage(ok_cost)
+        elif ok_priority_category == "blue_item":                           # 蓝材料的情况
+            get_min_blue_item_stage(my_items=my_inventory)
 
 
 def print_sanity_usage(sanity):
