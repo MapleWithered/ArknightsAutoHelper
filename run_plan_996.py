@@ -22,9 +22,11 @@ from penguin_stats import arkplanner
 
 from vendor.ArkPlanner.MaterialPlanning import MaterialPlanning
 
-mp = MaterialPlanning(update=True)
+logger.info('拉取ArkPlanner数据矩阵')
+mp = MaterialPlanning(update=True)      # 数据拉取1
 
-# arkplanner离线后备
+aog_data = None
+
 # 刷钱
 # GUI
 
@@ -102,16 +104,8 @@ def load_config():
 
 
 def load_aog_data():
-    if not os.path.exists(path_aog):
-        logger.info('未检测到一图流关卡数据，正在拉取')
-        aog_data = requests.get('https://arkonegraph.herokuapp.com/total/CN').json()
-        with open(path_aog, 'w', encoding='utf-8') as f:
-            yaml.dump(aog_data, f, Dumper=yaml.RoundTripDumper, indent=4, allow_unicode=True, encoding='utf-8')
-        logger.info('拉取完成，存放在{path_aog}')
-    else:
-        with open(path_aog, 'r', encoding='utf-8') as f:
-            aog_data = yaml.load(f.read(), Loader=yaml.RoundTripLoader)
-    return aog_data
+    global aog_data
+    aog_data = requests.get('https://arkonegraph.herokuapp.com/total/CN').json()
 
 
 def load_inventory():
@@ -164,12 +158,14 @@ def print_all_items_name():
 
 
 def get_min_blue_item_stage(item_excluded=None, stage_unavailable=None, my_items=None):
+    global aog_data
     config = load_config()
     if item_excluded is None:
         item_excluded = config['item_excluded']
     if stage_unavailable is None:
         stage_unavailable = config['stage_unavailable']
-    aog_data = load_aog_data()          # TODO: aog_data_cache()
+    if aog_data is None:
+        load_aog_data()
     if my_items is None:
         my_items = load_inventory()
     all_items = arkplanner.get_all_items()
@@ -667,10 +663,10 @@ def print_plan_with_plan(plan, my_inventory, print_priority=None):
         for stage in ok_priority_data:
             ok_cost += stage['sanity'] * stage['remain']
 
-    if ok_task_used + 1 == print_priority or print_priority is None:        # 要打印信息
-        if ok_cost is not None:                                             # 有理智消耗信息的情况
+    if ok_task_used + 1 == print_priority or print_priority is None:  # 要打印信息
+        if ok_cost is not None:  # 有理智消耗信息的情况
             print_sanity_usage(ok_cost)
-        elif ok_priority_category == "blue_item":                           # 蓝材料的情况
+        elif ok_priority_category == "blue_item":  # 蓝材料的情况
             get_min_blue_item_stage(my_items=my_inventory)
 
 
@@ -701,18 +697,24 @@ def clear_task_not_open():
 
 
 def run_update_data():
+    logger.info("拉取物品资源列表")
     arkplanner.update_cache()
+    logger.info('拉取ArkPlanner规划数据矩阵')
+    mp.update()
+    logger.info('拉取aog.wiki一图流关卡数据')
+    load_aog_data()
 
 
 if __name__ == '__main__':
 
     assert os.path.exists(path_plan), '未能检测到刷图计划文件.'
 
+    run_update_data()
+
     init_inventory = load_inventory()
 
     run_print_plan(init_inventory)
     run_plan()
-    run_update_data()
 
     run_ship()
     run_friend()
