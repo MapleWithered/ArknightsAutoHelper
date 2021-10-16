@@ -169,7 +169,7 @@ def get_min_blue_item_stage(item_excluded=None, stage_unavailable=None, my_items
         item_excluded = config['item_excluded']
     if stage_unavailable is None:
         stage_unavailable = config['stage_unavailable']
-    aog_data = load_aog_data()
+    aog_data = load_aog_data()          # TODO: aog_data_cache()
     if my_items is None:
         my_items = load_inventory()
     all_items = arkplanner.get_all_items()
