@@ -292,6 +292,9 @@ def goto_stage(stage):
         if Arknights.stage_path.is_stage_supported_ocr(stage):
             try:
                 helper.goto_stage_by_ocr(stage)
+            except ValueError:
+                failure_count += 1
+                continue
             except RuntimeError as err:
                 if str(err) == "recognition failed":
                     failure_count += 1
