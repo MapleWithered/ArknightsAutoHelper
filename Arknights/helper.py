@@ -918,6 +918,8 @@ class ArknightsHelper(object):
 
         last_direction = 1
 
+        jumping_count=0
+
         time.sleep(3)
 
         items = []
@@ -972,7 +974,25 @@ class ArknightsHelper(object):
                 last_screen_items = screen_item_ids
                 items += screen_items
 
+                # added for bugfix
+                while len(screen_items) == 0:
+                    move = -randint(self.viewport[0] // 4, self.viewport[0] // 3.8)
+                    self.adb.touch_swipe2([int(self.viewport[0] * 0.8), int(self.viewport[1] * 0.3)], [-200, 10], 3000)
+
+                    screenshot = self.adb.screenshot()
+
+                    screen_items = imgreco.inventory.get_all_item_details_in_screen(screenshot)
+                    screen_item_ids = set([item['itemId'] for item in screen_items])
+                    screen_items_map = {item['itemId']: item['quantity'] for item in screen_items}
+
+                    last_screen_items = screen_item_ids
+                    items += screen_items
+
                 last_direction = -1
+                jumping_count += 1
+                if jumping_count >= 20:
+                    logger.info("模拟器ADB信道通信不畅导致触摸坐标跳变，已重试20次，不再重试")
+                    break
                 continue
             if last_screen_items == screen_item_ids and last_direction == 1:
                 logger.info("读取完毕")
