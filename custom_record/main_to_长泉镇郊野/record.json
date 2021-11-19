@@ -1,0 +1,81 @@
+{
+    "back_to_main": true,
+    "description": "从主线一路点击进入长泉镇郊野关卡",
+    "prefer_mode": "match_template",
+    "records": [
+        {
+            "img": "step0.png",
+            "point": [
+                1401,
+                244
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step1.png",
+            "point": [
+                1503,
+                1007
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step2.png",
+            "point": [
+                438,
+                791
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step3.png",
+            "point": [
+                961,
+                539
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step4.png",
+            "point": [
+                1727,
+                1015
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step5.png",
+            "point": [
+                1442,
+                168
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        }
+    ],
+    "screen_height": 1080,
+    "screen_width": 1920
+}
