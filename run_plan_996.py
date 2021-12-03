@@ -105,7 +105,10 @@ def load_config():
 
 def load_aog_data():
     global aog_data
-    aog_data = requests.get('https://arkonegraph.herokuapp.com/total/CN').json()
+    headers = {'Referer': 'https://aog.wiki/'}
+    aog_data = requests.get('https://api.aog.wiki/v2/data/total/CN', headers=headers).json()
+    # with open("./007/cache/aog.yaml", 'r', encoding='utf-8') as f:
+    #     aog_data = yaml.load(f.read(), Loader=yaml.Loader)
 
 
 def load_inventory():
