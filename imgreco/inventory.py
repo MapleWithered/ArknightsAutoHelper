@@ -185,10 +185,10 @@ def get_all_item_details_in_screen(screen, exclude_item_ids=None, exclude_item_t
         logger.logimage(convert_to_pil(item_img['item_img']))
         prob, item_id, item_name, item_type = item.get_item_id(item_img['item_img'])
         logger.logtext('item_id: %s, item_name: %s, prob: %s, type: %s' % (item_id, item_name, prob, item_type))
-        if item_id in exclude_item_ids or item_type in exclude_item_types:
-            continue
-        if only_normal_items and (not item_id.isdigit() or len(item_id) < 5 or item_type != 'MATERIAL'):
-            continue
+        # if item_id in exclude_item_ids or item_type in exclude_item_types:
+        #     continue
+        # if only_normal_items and (not item_id.isdigit() or len(item_id) < 5 or item_type != 'MATERIAL'):
+        #     continue
         quantity = get_quantity(item_img['num_img'])
         # get_quantity2(item_img['item_img'])
         res.append({'itemId': item_id, 'itemName': item_name, 'itemType': item_type,
