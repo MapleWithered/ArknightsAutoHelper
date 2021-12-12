@@ -116,6 +116,7 @@ def load_inventory():
     for item in my_inventory:
         if my_inventory[item] is None:
             my_inventory[item] = 0
+    my_inventory['total_exp'] = calc_experience(my_inventory)
     return my_inventory
 
 
@@ -709,6 +710,20 @@ def run_update_data():
     mp.update()
     logger.info('拉取aog.wiki一图流关卡数据')
     load_aog_data()
+
+
+def calc_experience(inventory):
+    sum = 0
+    if '2004' in inventory:
+        sum += inventory['2004'] * 2000
+    if '2003' in inventory:
+        sum += inventory['2003'] * 1000
+    if '2002' in inventory:
+        sum += inventory['2002'] * 400
+    if '2001' in inventory:
+        sum += inventory['2001'] * 200
+    return sum
+
 
 
 if __name__ == '__main__':
