@@ -840,4 +840,5 @@ if __name__ == '__main__':
             }[(timenow.minute // 10)]
             timenext = (datetime.datetime.now() + datetime.timedelta(seconds=schedule.idle_seconds())).time()
             logger.info('计划：将于 ' + timenext.isoformat(timespec='minutes') + ' 开始 ' + nexttask_str)
-            time.sleep(schedule.idle_seconds())
+            if schedule.idle_seconds() >0:
+                time.sleep(schedule.idle_seconds())
