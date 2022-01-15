@@ -1,0 +1,45 @@
+{
+    "back_to_main": true,
+    "description": "从主线一路点击进入BI关卡（章节）",
+    "prefer_mode": "match_template",
+    "records": [
+        {
+            "img": "step0.png",
+            "point": [
+                1408,
+                245
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step1.png",
+            "point": [
+                629,
+                849
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        },
+        {
+            "img": "step2.png",
+            "point": [
+                1656,
+                485
+            ],
+            "raise_exception": true,
+            "repeat": 1,
+            "threshold": 0.7,
+            "type": "tap",
+            "wait_seconds_after_touch": 4
+        }
+    ],
+    "screen_height": 1080,
+    "screen_width": 1920
+}

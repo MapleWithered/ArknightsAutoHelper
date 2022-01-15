@@ -333,9 +333,9 @@ def ensure_stage(stage):
             logger.debug('当前画面关卡：%s', recoresult['operation'])
             if stage is not None:
                 # 如果传入了关卡 ID，检查识别结果
-                if recoresult['operation'] != stage:
+                if recoresult['operation'][-1] != stage[-1]:
                     # print(recoresult['operation'])
-                    logger.error('不在关卡界面')
+                    logger.error('不在关卡界面，当前为'+recoresult['operation'])
                     return -1
                 else:
                     return 0
@@ -425,7 +425,7 @@ def run_plan():
                 logger.warning('优先级: %s, 关卡 [%s]' % (
                     priority_id, min_blue_stage))
                 goto_stage(min_blue_stage)
-                _, remain = helper.module_battle_slim(min_blue_stage, 1)
+                _, remain = helper.module_battle_slim(set_count=1)
                 inventory_loaded = False
                 if remain == 1:  # 理智不足未进行单次任务执行
                     has_remain_sanity = False
